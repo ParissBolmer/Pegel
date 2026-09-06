@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E8E9E3">
+<title>Pegel</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --paper:#E8E9E3;
+  --panel:#F5F6F1;
+  --ink:#161A17;
+  --ink-2:#5A6159;
+  --ink-3:#8A9188;
+  --grid:#CDD0C6;
+  --rule:#B9BEB2;
+  --pen-0:#161A17;
+  --pen-1:#C1272D;
+  --pen-2:#1F4EA1;
+  --pen-3:#1E7A3C;
+  --pen-4:#A6238F;
+  --pen-5:#D2691E;
+  --pen-6:#0E7E8C;
+  --pen-7:#7A4A21;
+  --mono:ui-monospace,"Roboto Mono","SF Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --nav-h:58px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.45;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  overscroll-behavior-y:contain;
+}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+input,select{font:inherit;color:inherit}
+
+/* ---------- Kopfleiste ---------- */
+header{
+  position:sticky;top:0;z-index:20;
+  background:var(--paper);
+  border-bottom:1px solid var(--rule);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 8px;
+  display:flex;align-items:baseline;gap:12px;
+}
+.wordmark{
+  font-family:var(--mono);font-size:13px;font-weight:700;
+  letter-spacing:.34em;text-transform:uppercase;
+}
+.header-meta{
+  margin-left:auto;font-family:var(--mono);font-size:11px;
+  letter-spacing:.08em;color:var(--ink-3);text-align:right;
+}
+
+main{padding:0 16px 28px}
+section[hidden]{display:none}
+
+.eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-3);
+  margin:26px 0 10px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--rule)}
+.eyebrow:first-child{margin-top:18px}
+
+/* ---------- Datumszeile ---------- */
+.datebar{
+  display:flex;align-items:center;gap:6px;margin-top:16px;
+  border:1px solid var(--rule);background:var(--panel);
+}
+.datebar button.step{
+  width:44px;height:44px;font-family:var(--mono);font-size:17px;
+  color:var(--ink-2);flex:none;
+}
+.datebar button.step:disabled{color:var(--grid)}
+.datebar .dateface{
+  flex:1;text-align:center;font-family:var(--mono);
+  font-size:15px;letter-spacing:.04em;position:relative;
+}
+.datebar .dateface .weekday{
+  display:block;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:1px;
+}
+.datebar input[type=date]{
+  position:absolute;inset:0;opacity:0;width:100%;height:100%;
+}
+
+/* ---------- Parameter-Zeilen ---------- */
+.param{margin:18px 0 0}
+.param-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.pen{width:9px;height:9px;flex:none;transform:translateY(-1px)}
+.param-name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.param-val{
+  margin-left:auto;font-family:var(--mono);font-size:19px;
+  font-weight:700;font-variant-numeric:tabular-nums;
+}
+.param-val.empty{color:var(--grid);font-weight:400}
+.scale{display:flex;gap:2px}
+.scale button{
+  flex:1;height:42px;background:var(--panel);
+  border:1px solid var(--rule);
+  font-family:var(--mono);font-size:12px;color:var(--ink-3);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:4px;transition:background .11s,color .11s;
+}
+.scale button[aria-pressed="true"]{
+  background:var(--tint);color:#fff;border-color:var(--tint);font-weight:700;
+}
+.scale button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+
+.saved-note{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:22px;
+  display:flex;align-items:center;gap:8px;
+}
+.dot{width:6px;height:6px;background:var(--pen-3);flex:none}
+
+/* ---------- Steuerelemente ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  padding:7px 11px;border:1px solid var(--rule);background:var(--panel);
+  color:var(--ink-2);text-transform:uppercase;
+}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0 0}
+.legend button{
+  display:flex;align-items:center;gap:6px;
+  border:1px solid var(--rule);background:var(--panel);
+  padding:6px 9px;font-size:12.5px;
+}
+.legend button[aria-pressed="false"]{opacity:.4}
+.legend .pen{width:14px;height:3px;transform:none}
+
+/* ---------- Diagramm ---------- */
+.plot{
+  margin-top:12px;border:1px solid var(--rule);background:var(--panel);
+  position:relative;
+}
+.plot canvas{display:block;width:100%;touch-action:pan-y}
+.plot-foot{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  color:var(--ink-3);padding:6px 9px;border-top:1px solid var(--rule);
+  text-transform:uppercase;
+}
+
+/* ---------- Korrelationsmatrix ---------- */
+.matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px}
+table.matrix{border-collapse:collapse;font-family:var(--mono);font-size:11px}
+table.matrix th{
+  font-weight:400;color:var(--ink-2);padding:4px 6px;
+  text-align:right;white-space:nowrap;font-size:10.5px;
+}
+table.matrix th.col{
+  text-align:center;writing-mode:vertical-rl;transform:rotate(180deg);
+  height:74px;vertical-align:bottom;padding:6px 2px;
+}
+table.matrix td{
+  width:42px;height:38px;text-align:center;
+  border:1px solid var(--paper);font-variant-numeric:tabular-nums;
+  font-weight:600;
+}
+table.matrix td.self{background:transparent;color:var(--grid);font-weight:400}
+table.matrix td.blank{background:transparent}
+table.matrix td button{width:100%;height:100%;font:inherit;color:inherit}
+
+.detail{
+  margin-top:14px;border:1px solid var(--rule);background:var(--panel);padding:13px;
+}
+.detail h3{
+  margin:0 0 3px;font-size:14px;font-weight:600;letter-spacing:-.01em;
+}
+.detail .r-line{
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-2);
+  letter-spacing:.05em;margin-bottom:11px;
+}
+.lagbars{display:flex;align-items:flex-end;gap:3px;height:66px;margin-bottom:5px}
+.lagbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative}
+.lagbar i{display:block;background:var(--ink-3)}
+.lagbar.pos i{background:var(--pen-2)}
+.lagbar.neg i{background:var(--pen-1)}
+.lagbar.best i{outline:1px solid var(--ink)}
+.laglabels{display:flex;gap:3px;font-family:var(--mono);font-size:9px;color:var(--ink-3)}
+.laglabels span{flex:1;text-align:center}
+
+/* ---------- Daten-Tab ---------- */
+.row{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 0;border-bottom:1px solid var(--rule);
+}
+.row:last-of-type{border-bottom:none}
+.row input[type=text]{
+  flex:1;min-width:0;background:transparent;border:none;
+  border-bottom:1px dashed var(--rule);padding:3px 0;font-size:14.5px;
+}
+.row input[type=text]:focus{outline:none;border-bottom-color:var(--ink)}
+.row .kill{
+  font-family:var(--mono);font-size:11px;color:var(--ink-3);
+  padding:6px 8px;letter-spacing:.06em;
+}
+.row .kill:hover{color:var(--pen-1)}
+.day-row{
+  display:flex;align-items:center;gap:12px;padding:9px 0;
+  border-bottom:1px solid var(--rule);width:100%;text-align:left;
+}
+.day-row .d{font-family:var(--mono);font-size:12px;color:var(--ink-2);flex:none;width:76px}
+.day-row .v{
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-3);
+  display:flex;gap:6px;flex-wrap:wrap;
+}
+.day-row .v b{font-weight:600;color:var(--ink)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;padding:12px 16px;
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+.hint{font-size:13px;color:var(--ink-2);margin:8px 0 0;line-height:1.5}
+.hint code{font-family:var(--mono);font-size:12px;background:var(--panel);padding:1px 4px;border:1px solid var(--rule)}
+.empty{
+  font-family:var(--mono);font-size:12px;color:var(--ink-3);
+  border:1px dashed var(--rule);padding:22px 16px;text-align:center;
+  letter-spacing:.06em;line-height:1.7;
+}
+
+/* ---------- Navigation ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--paper);border-top:1px solid var(--rule);
+  display:flex;
+}
+nav button{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-3);position:relative;
+}
+nav button[aria-selected="true"]{color:var(--ink)}
+nav button[aria-selected="true"]::before{
+  content:"";position:absolute;top:-1px;left:0;right:0;height:2px;background:var(--ink);
+}
+nav svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5}
+
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(14px);
+  bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
+  background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  padding:10px 16px;text-transform:uppercase;z-index:40;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="wordmark">Pegel</span>
+  <span class="header-meta" id="headerMeta"></span>
+</header>
+
+<main>
+
+<!-- ============ EINTRAG ============ -->
+<section id="tab-entry">
+  <div class="datebar">
+    <button class="step" id="dayPrev" aria-label="Vorheriger Tag">&#8249;</button>
+    <div class="dateface">
+      <span class="weekday" id="dfWeekday"></span>
+      <span id="dfDate"></span>
+      <input type="date" id="datePick" aria-label="Datum wählen">
+    </div>
+    <button class="step" id="dayNext" aria-label="Nächster Tag">&#8250;</button>
+  </div>
+
+  <div id="entryList"></div>
+  <div class="saved-note" id="savedNote" hidden><span class="dot"></span><span id="savedText"></span></div>
+</section>
+
+<!-- ============ TREND ============ -->
+<section id="tab-trend" hidden>
+  <div class="eyebrow">Zeitraum</div>
+  <div class="controls" id="rangeCtl">
+    <button class="chip" data-range="30">30 Tage</button>
+    <button class="chip" data-range="90">90 Tage</button>
+    <button class="chip" data-range="365">1 Jahr</button>
+    <button class="chip" data-range="0">Alles</button>
+  </div>
+
+  <div class="eyebrow">Gleitendes Mittel</div>
+  <div class="controls" id="maCtl">
+    <button class="chip" data-ma="1">Aus</button>
+    <button class="chip" data-ma="3">3 Tage</button>
+    <button class="chip" data-ma="7">7 Tage</button>
+    <button class="chip" data-ma="14">14 Tage</button>
+    <button class="chip" data-ma="30">30 Tage</button>
+  </div>
+
+  <div class="plot">
+    <canvas id="chart" height="480"></canvas>
+    <div class="plot-foot"><span id="chartFrom"></span><span id="chartTo"></span></div>
+  </div>
+  <div class="legend" id="legend"></div>
+
+  <div class="eyebrow">Korrelationen</div>
+  <div id="matrixHost"></div>
+  <div id="detailHost"></div>
+</section>
+
+<!-- ============ DATEN ============ -->
+<section id="tab-data" hidden>
+  <div class="eyebrow">Parameter</div>
+  <div id="paramEditor"></div>
+  <div class="btn-row">
+    <button class="btn ghost" id="addParam">Parameter hinzufügen</button>
+  </div>
+
+  <div class="eyebrow">Import und Export</div>
+  <p class="hint">CSV mit Datum in der ersten Spalte, danach je Parameter eine Spalte. Erkannt werden <code>2026-08-14</code> und <code>14.08.2026</code>, Trennzeichen Komma, Semikolon oder Tab. Spalten mit unbekanntem Namen werden als neue Parameter angelegt.</p>
+  <div class="btn-row">
+    <button class="btn" id="importBtn">CSV einlesen</button>
+    <button class="btn ghost" id="exportBtn">CSV sichern</button>
+  </div>
+  <input type="file" id="fileInput" accept=".csv,.txt,text/csv,text/plain" hidden>
+
+  <div class="eyebrow">Erfasste Tage</div>
+  <div id="dayList"></div>
+</section>
+
+</main>
+
+<nav role="tablist">
+  <button role="tab" data-tab="entry" aria-selected="true">
+    <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h9"/><circle cx="18" cy="19" r="2.4"/></svg>
+    Eintrag
+  </button>
+  <button role="tab" data-tab="trend" aria-selected="false">
+    <svg viewBox="0 0 24 24"><path d="M3 20V4M3 20h18"/><path d="M6 15l4-5 3 3 5-8"/></svg>
+    Trend
+  </button>
+  <button role="tab" data-tab="data" aria-selected="false">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg>
+    Daten
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Speicher — nutzt window.storage im Claude-Artefakt,
+   sonst localStorage auf dem Handy. Gleiche Datei, beide Orte.
+   ============================================================ */
+const KEY = "pegel:v1";
+const Store = {
+  hasNative(){ return typeof window !== "undefined" && window.storage && typeof window.storage.get === "function"; },
+  async load(){
+    if(this.hasNative()){
+      try{ const r = await window.storage.get(KEY); return r && r.value ? JSON.parse(r.value) : null; }
+      catch(e){ return null; }
+    }
+    try{ const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; }
+    catch(e){ return null; }
+  },
+  async save(obj){
+    const s = JSON.stringify(obj);
+    if(this.hasNative()){
+      try{ await window.storage.set(KEY, s); return true; }catch(e){ return false; }
+    }
+    try{ localStorage.setItem(KEY, s); return true; }catch(e){ return false; }
+  }
+};
+
+const PENS = ["--pen-0","--pen-1","--pen-2","--pen-3","--pen-4","--pen-5","--pen-6","--pen-7"];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const penColor = i => css(PENS[i % PENS.length]);
+
+/* ---------- Zustand ---------- */
+let data = { params: [], entries: {} };
+let view = { tab:"entry", date: todayKey(), range: 90, ma: 7, hidden: {}, pair: null };
+let saveTimer = null;
+
+const DEFAULT_PARAMS = ["Schlaf","Energie","Konzentration","Stimmung","Bewegung","Stress"];
+
+/* ---------- Datumshilfen ---------- */
+function todayKey(){ return toKey(new Date()); }
+function toKey(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function fromKey(k){ const p = k.split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function shiftKey(k, n){ const d = fromKey(k); d.setDate(d.getDate()+n); return toKey(d); }
+const WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const MO = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+function prettyDate(k){ const d = fromKey(k); return d.getDate()+". "+MO[d.getMonth()]+" "+d.getFullYear(); }
+function shortDate(k){ const d = fromKey(k); return d.getDate()+"."+(d.getMonth()+1)+"."; }
+
+function uid(){ return "p" + Math.random().toString(36).slice(2,8); }
+
+/* ---------- Persistenz ---------- */
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ Store.save(data); }, 250);
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("on"), 1900);
+}
+
+/* ============================================================
+   Tab: Eintrag
+   ============================================================ */
+function renderEntry(){
+  const k = view.date;
+  document.getElementById("dfWeekday").textContent = WD[fromKey(k).getDay()];
+  document.getElementById("dfDate").textContent = prettyDate(k);
+  document.getElementById("datePick").value = k;
+  document.getElementById("dayNext").disabled = k >= todayKey();
+
+  const host = document.getElementById("entryList");
+  host.innerHTML = "";
+  const day = data.entries[k] || {};
+
+  if(!data.params.length){
+    host.innerHTML = '<div class="empty">Noch keine Parameter angelegt.<br>Im Tab Daten anlegen oder eine CSV einlesen.</div>';
+    document.getElementById("savedNote").hidden = true;
+    return;
+  }
+
+  data.params.forEach((p, i) => {
+    const val = day[p.id];
+    const wrap = document.createElement("div");
+    wrap.className = "param";
+    const col = penColor(i);
+
+    const head = document.createElement("div");
+    head.className = "param-head";
+    head.innerHTML =
+      '<span class="pen" style="background:'+col+'"></span>' +
+      '<span class="param-name">' + escapeHtml(p.name) + '</span>' +
+      '<span class="param-val' + (val==null?" empty":"") + '">' + (val==null ? "—" : val) + '</span>';
+    wrap.appendChild(head);
+
+    const scale = document.createElement("div");
+    scale.className = "scale";
+    for(let n=1; n<=10; n++){
+      const b = document.createElement("button");
+      b.textContent = n;
+      b.style.setProperty("--tint", col);
+      b.setAttribute("aria-pressed", String(val === n));
+      b.setAttribute("aria-label", p.name + " " + n + " von 10");
+      b.addEventListener("click", () => setValue(k, p.id, val === n ? null : n));
+      scale.appendChild(b);
+    }
+    wrap.appendChild(scale);
+    host.appendChild(wrap);
+  });
+
+  const filled = data.params.filter(p => day[p.id] != null).length;
+  const note = document.getElementById("savedNote");
+  if(filled){
+    note.hidden = false;
+    document.getElementById("savedText").textContent =
+      filled + " von " + data.params.length + " erfasst · gespeichert";
+  }else{
+    note.hidden = true;
+  }
+}
+
+function setValue(dateKey, paramId, val){
+  if(!data.entries[dateKey]) data.entries[dateKey] = {};
+  if(val == null) delete data.entries[dateKey][paramId];
+  else data.entries[dateKey][paramId] = val;
+  if(!Object.keys(data.entries[dateKey]).length) delete data.entries[dateKey];
+  queueSave(); renderEntry(); updateHeader();
+}
+
+/* ============================================================
+   Rechnen
+   ============================================================ */
+function seriesFor(paramId, days){
+  return days.map(k => {
+    const e = data.entries[k];
+    const v = e ? e[paramId] : undefined;
+    return (typeof v === "number") ? v : null;
+  });
+}
+function movingAvg(arr, win){
+  if(win <= 1) return arr.slice();
+  const out = new Array(arr.length).fill(null);
+  for(let i=0; i<arr.length; i++){
+    let sum=0, n=0;
+    for(let j=Math.max(0,i-win+1); j<=i; j++){ if(arr[j]!=null){ sum+=arr[j]; n++; } }
+    if(n >= Math.max(2, Math.ceil(win/3))) out[i] = sum/n;
+  }
+  return out;
+}
+function pearson(a, b, lag){
+  lag = lag || 0;
+  const xs=[], ys=[];
+  for(let i=0; i<a.length; i++){
+    const j = i + lag;
+    if(j<0 || j>=b.length) continue;
+    if(a[i]==null || b[j]==null) continue;
+    xs.push(a[i]); ys.push(b[j]);
+  }
+  const n = xs.length;
+  if(n < 5) return { r:null, n:n, xs:xs, ys:ys };
+  const mx = xs.reduce((s,v)=>s+v,0)/n, my = ys.reduce((s,v)=>s+v,0)/n;
+  let sxy=0, sxx=0, syy=0;
+  for(let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+  if(sxx===0 || syy===0) return { r:null, n:n, xs:xs, ys:ys };
+  return { r: sxy/Math.sqrt(sxx*syy), n:n, xs:xs, ys:ys };
+}
+function daysInView(){
+  const keys = Object.keys(data.entries).sort();
+  if(!keys.length) return [];
+  const last = todayKey() > keys[keys.length-1] ? todayKey() : keys[keys.length-1];
+  let first;
+  if(view.range === 0){ first = keys[0]; }
+  else { first = shiftKey(last, -(view.range-1)); if(first < keys[0]) first = keys[0]; }
+  const out = []; let cur = first;
+  let guard = 0;
+  while(cur <= last && guard++ < 4000){ out.push(cur); cur = shiftKey(cur, 1); }
+  return out;
+}
+function activeParams(){ return data.params.filter(p => !view.hidden[p.id]); }
+
+/* ============================================================
+   Tab: Trend
+   ============================================================ */
+function renderTrend(){
+  document.querySelectorAll("#rangeCtl .chip").forEach(b =>
+    b.setAttribute("aria-pressed", String(Number(b.dataset.range) === view.range)));
+  document.querySelectorAll("#maCtl .chip").forEach(b =>
+    b.setAttribute("aria-pressed", String(Number(b.dataset.ma) === view.ma)));
+
+  const leg = document.getElementById("legend");
+  leg.innerHTML = "";
+  data.params.forEach((p,i) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-pressed", String(!view.hidden[p.id]));
+    b.innerHTML = '<span class="pen" style="background:'+penColor(i)+'"></span>' + escapeHtml(p.name);
+    b.addEventListener("click", () => {
+      view.hidden[p.id] = !view.hidden[p.id];
+      renderTrend();
+    });
+    leg.appendChild(b);
+  });
+
+  const days = daysInView();
+  document.getElementById("chartFrom").textContent = days.length ? shortDate(days[0]) : "";
+  document.getElementById("chartTo").textContent = days.length ? shortDate(days[days.length-1]) : "";
+  drawChart(days);
+  renderMatrix(days);
+  renderDetail(days);
+}
+
+function drawChart(days){
+  const cv = document.getElementById("chart");
+  const parent = cv.parentElement;
+  const cssW = parent.clientWidth;
+  const cssH = 250;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr);
+  cv.style.height = cssH + "px";
+  const g = cv.getContext("2d");
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,cssW,cssH);
+
+  const L=30, R=10, T=14, B=20;
+  const w = cssW-L-R, h = cssH-T-B;
+  const inkGrid = css("--grid"), ink3 = css("--ink-3"), rule = css("--rule");
+
+  if(days.length < 2 || !activeParams().length){
+    g.fillStyle = ink3; g.font = "12px " + css("--mono");
+    g.textAlign = "center";
+    g.fillText(days.length<2 ? "Noch zu wenig Daten für eine Kurve"
+                             : "Alle Parameter ausgeblendet", cssW/2, cssH/2);
+    return;
+  }
+
+  const X = i => L + (days.length===1 ? w/2 : (i/(days.length-1))*w);
+  const Y = v => T + h - ((v-1)/9)*h;
+
+  // Raster
+  g.lineWidth = 1;
+  for(let v=1; v<=10; v++){
+    const y = Math.round(Y(v))+0.5;
+    g.strokeStyle = (v===1||v===10) ? rule : inkGrid;
+    g.globalAlpha = (v%1===0 && (v===5||v===6)) ? 0.7 : 0.55;
+    if(v===1||v===10) g.globalAlpha = 1;
+    g.beginPath(); g.moveTo(L,y); g.lineTo(L+w,y); g.stroke();
+  }
+  g.globalAlpha = 1;
+  g.fillStyle = ink3; g.font = "10px " + css("--mono"); g.textAlign = "right";
+  [1,5,10].forEach(v => g.fillText(String(v), L-7, Y(v)+3.5));
+
+  // Monatsmarken
+  g.textAlign = "center";
+  let lastMonth = -1;
+  days.forEach((k,i) => {
+    const d = fromKey(k);
+    if(d.getMonth() !== lastMonth && i > 2 && i < days.length-2){
+      lastMonth = d.getMonth();
+      const x = Math.round(X(i))+0.5;
+      g.strokeStyle = inkGrid; g.globalAlpha = .85;
+      g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+h); g.stroke();
+      g.globalAlpha = 1;
+      g.fillStyle = ink3; g.fillText(MO[d.getMonth()], x, T+h+13);
+    }
+  });
+
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const t0 = performance.now();
+  const DUR = reduce ? 0 : 520;
+
+  const layers = activeParams().map(p => {
+    const idx = data.params.indexOf(p);
+    const raw = seriesFor(p.id, days);
+    return { color: penColor(idx), raw: raw, ma: movingAvg(raw, view.ma) };
+  });
+
+  function frame(now){
+    const prog = DUR === 0 ? 1 : Math.min(1, (now-t0)/DUR);
+    const eased = 1 - Math.pow(1-prog, 3);
+    const clipX = L + w*eased + 1;
+
+    // Kurvenfläche komplett putzen und Raster neu setzen,
+    // damit nie ein Rasterstrich über einer Kurve landet
+    g.clearRect(L-1, T-6, w+3, h+8);
+
+    g.save();
+    g.beginPath(); g.rect(L-1, T-6, w+3, h+8); g.clip();
+    g.lineWidth = 1;
+    for(let v=1; v<=10; v++){
+      const y = Math.round(Y(v))+0.5;
+      g.strokeStyle = (v===1||v===10) ? rule : inkGrid;
+      g.globalAlpha = (v===1||v===10) ? 1 : .55;
+      g.beginPath(); g.moveTo(L,y); g.lineTo(L+w,y); g.stroke();
+    }
+    g.globalAlpha = 1;
+    let lm = -1;
+    days.forEach((k,i)=>{
+      const d = fromKey(k);
+      if(d.getMonth()!==lm && i>2 && i<days.length-2){
+        lm = d.getMonth();
+        const x = Math.round(X(i))+0.5;
+        g.strokeStyle = inkGrid; g.globalAlpha=.85;
+        g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+h); g.stroke();
+        g.globalAlpha=1;
+      }
+    });
+    g.restore();
+
+    g.save();
+    g.beginPath(); g.rect(L-2, 0, clipX-(L-2), cssH); g.clip();
+
+    layers.forEach(ly => {
+      // Rohwerte, dünn
+      g.strokeStyle = ly.color; g.lineWidth = 1;
+      g.globalAlpha = view.ma > 1 ? .28 : .9;
+      g.beginPath();
+      let pen = false;
+      ly.raw.forEach((v,i)=>{
+        if(v==null){ pen = false; return; }
+        const x = X(i), y = Y(v);
+        if(!pen){ g.moveTo(x,y); pen = true; } else g.lineTo(x,y);
+      });
+      g.stroke();
+
+      if(days.length <= 70){
+        g.fillStyle = ly.color;
+        ly.raw.forEach((v,i)=>{ if(v!=null){ g.beginPath(); g.arc(X(i),Y(v),1.7,0,7); g.fill(); } });
+      }
+
+      // Gleitendes Mittel, kräftig
+      if(view.ma > 1){
+        g.globalAlpha = 1; g.lineWidth = 2.2;
+        g.lineJoin = "round"; g.lineCap = "round";
+        g.strokeStyle = ly.color;
+        g.beginPath();
+        pen = false;
+        ly.ma.forEach((v,i)=>{
+          if(v==null){ pen=false; return; }
+          const x = X(i), y = Y(v);
+          if(!pen){ g.moveTo(x,y); pen=true; } else g.lineTo(x,y);
+        });
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+    });
+    g.restore();
+
+    if(prog < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Korrelationsmatrix ---------- */
+function fmtR(r){
+  if(r == null) return "·";
+  const a = Math.abs(r);
+  const s = a >= 0.995 ? "1,0" : a.toFixed(2).slice(1).replace(".", ",");
+  return (r < 0 ? "−" : "") + s;
+}
+function corrColor(r){
+  if(r == null) return "transparent";
+  const a = Math.min(1, Math.abs(r));
+  const strength = 0.10 + a*0.72;
+  return r >= 0 ? "rgba(31,78,161," + strength.toFixed(3) + ")"
+                : "rgba(193,39,45," + strength.toFixed(3) + ")";
+}
+function renderMatrix(days){
+  const host = document.getElementById("matrixHost");
+  const ps = data.params;
+  if(ps.length < 2){
+    host.innerHTML = '<div class="empty">Ab zwei Parametern zeigt sich hier die Korrelationsmatrix.</div>';
+    return;
+  }
+  const series = ps.map(p => seriesFor(p.id, days));
+  let anyValue = false;
+
+  let html = '<div class="matrix-wrap"><table class="matrix"><tr><th></th>';
+  ps.forEach((p,j) => { if(j < ps.length-1) html += '<th class="col">'+escapeHtml(p.name)+'</th>'; });
+  html += '</tr>';
+
+  for(let i=1; i<ps.length; i++){
+    html += '<tr><th>'+escapeHtml(ps[i].name)+'</th>';
+    for(let j=0; j<ps.length-1; j++){
+      if(j >= i){ html += '<td class="blank"></td>'; continue; }
+      const res = pearson(series[i], series[j], 0);
+      if(res.r != null) anyValue = true;
+      const label = fmtR(res.r);
+      html += '<td style="background:'+corrColor(res.r)+'">'
+            + '<button data-i="'+i+'" data-j="'+j+'" aria-label="'
+            + escapeHtml(ps[i].name)+' gegen '+escapeHtml(ps[j].name)+'">'+label+'</button></td>';
+    }
+    html += '</tr>';
+  }
+  html += '</table></div>';
+
+  if(!anyValue){
+    host.innerHTML = '<div class="empty">Noch zu wenige gemeinsame Tage.<br>Ab fünf Tagen je Paar wird gerechnet.</div>';
+    return;
+  }
+  html += '<p class="hint">Blau: steigt zusammen. Rot: gegenläufig. Zelle antippen für Streubild und Zeitversatz.</p>';
+  host.innerHTML = html;
+
+  host.querySelectorAll("td button").forEach(b => {
+    b.addEventListener("click", () => {
+      const i = +b.dataset.i, j = +b.dataset.j;
+      view.pair = (view.pair && view.pair[0]===i && view.pair[1]===j) ? null : [i,j];
+      renderDetail(days);
+      if(view.pair) document.getElementById("detailHost").scrollIntoView({behavior:"smooth", block:"nearest"});
+    });
+  });
+}
+
+function renderDetail(days){
+  const host = document.getElementById("detailHost");
+  if(!view.pair){ host.innerHTML = ""; return; }
+  const [i,j] = view.pair;
+  const pa = data.params[i], pb = data.params[j];
+  if(!pa || !pb){ view.pair = null; host.innerHTML = ""; return; }
+
+  const A = seriesFor(pa.id, days), B = seriesFor(pb.id, days);
+  const base = pearson(A, B, 0);
+
+  const lags = [];
+  for(let L=-5; L<=5; L++){ const r = pearson(A, B, L); lags.push({L:L, r:r.r, n:r.n}); }
+  // Bester Versatz: größtes |r|, bei Gleichstand der kleinere Versatz,
+  // und nur Versätze mit ausreichend gemeinsamen Tagen
+  const maxN = Math.max.apply(null, lags.map(x => x.n || 0));
+  const best = lags.reduce((m,x) => {
+    if(x.r == null || x.n < Math.max(5, maxN*0.6)) return m;
+    if(m == null) return x;
+    const diff = Math.abs(x.r) - Math.abs(m.r);
+    if(diff > 0.02) return x;
+    if(diff > -0.02 && Math.abs(x.L) < Math.abs(m.L)) return x;
+    return m;
+  }, null);
+  const maxAbs = Math.max(0.2, ...lags.map(x => x.r==null?0:Math.abs(x.r)));
+
+  let bars = '<div class="lagbars">';
+  lags.forEach(x => {
+    const hgt = x.r==null ? 0 : Math.round((Math.abs(x.r)/maxAbs)*100);
+    const cls = x.r==null ? "" : (x.r>=0 ? "pos" : "neg");
+    const isBest = best && x.L===best.L ? " best" : "";
+    bars += '<div class="lagbar '+cls+isBest+'"><i style="height:'+hgt+'%"></i></div>';
+  });
+  bars += '</div><div class="laglabels">' + lags.map(x=>'<span>'+(x.L>0?"+":"")+x.L+'</span>').join("") + '</div>';
+
+  const rTxt = base.r==null ? "zu wenige gemeinsame Tage"
+    : "r = " + base.r.toFixed(2) + "  ·  n = " + base.n + " Tage";
+
+  let interp = "";
+  if(best && best.r != null && Math.abs(best.r) > Math.abs(base.r||0) + 0.08){
+    const dir = best.L > 0
+      ? escapeHtml(pa.name) + " geht " + Math.abs(best.L) + " Tag(e) voraus"
+      : escapeHtml(pb.name) + " geht " + Math.abs(best.L) + " Tag(e) voraus";
+    interp = '<p class="hint">Stärkster Zusammenhang bei Versatz ' + (best.L>0?"+":"") + best.L +
+             ' (r = ' + best.r.toFixed(2) + '): ' + dir + '.</p>';
+  }
+
+  host.innerHTML =
+    '<div class="detail">' +
+      '<h3>' + escapeHtml(pa.name) + ' &times; ' + escapeHtml(pb.name) + '</h3>' +
+      '<div class="r-line">' + rTxt + '</div>' +
+      '<canvas id="scatter" height="360"></canvas>' +
+      '<div class="eyebrow" style="margin:18px 0 8px">Zeitversatz in Tagen</div>' +
+      bars + interp +
+    '</div>';
+
+  drawScatter(base, penColor(i), penColor(j), pa.name, pb.name);
+}
+
+function drawScatter(res, colA, colB, nameA, nameB){
+  const cv = document.getElementById("scatter");
+  if(!cv) return;
+  cv.style.display = "block";
+  cv.style.width = "100%";
+  const cssW = Math.max(200, Math.round(cv.getBoundingClientRect().width));
+  const cssH = 190;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr);
+  cv.style.height = cssH + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,cssW,cssH);
+
+  const L=26,R=8,T=8,B=24;
+  const w=cssW-L-R, h=cssH-T-B;
+  const X = v => L + ((v-1)/9)*w;
+  const Y = v => T + h - ((v-1)/9)*h;
+
+  g.strokeStyle = css("--grid"); g.lineWidth = 1;
+  for(let v=1; v<=10; v++){
+    g.globalAlpha = (v===1||v===10) ? .9 : .4;
+    g.beginPath(); g.moveTo(Math.round(X(v))+.5,T); g.lineTo(Math.round(X(v))+.5,T+h); g.stroke();
+    g.beginPath(); g.moveTo(L,Math.round(Y(v))+.5); g.lineTo(L+w,Math.round(Y(v))+.5); g.stroke();
+  }
+  g.globalAlpha = 1;
+  g.fillStyle = css("--ink-3"); g.font = "9.5px " + css("--mono");
+  g.textAlign="right"; g.fillText("10", L-5, Y(10)+3); g.fillText("1", L-5, Y(1)+3);
+  g.textAlign="center";
+  g.fillText(nameB.slice(0,18) + " →", L+w/2, cssH-6);
+  g.save(); g.translate(9, T+h/2); g.rotate(-Math.PI/2);
+  g.fillText("↑ " + nameA.slice(0,16), 0, 0); g.restore();
+
+  if(!res.xs || !res.xs.length){
+    g.fillStyle = css("--ink-3"); g.fillText("keine gemeinsamen Tage", L+w/2, T+h/2);
+    return;
+  }
+
+  // Punkte mit Häufigkeitsstapelung
+  const counts = {};
+  for(let i=0;i<res.xs.length;i++){
+    const k = res.ys[i] + ":" + res.xs[i];
+    counts[k] = (counts[k]||0)+1;
+  }
+  Object.keys(counts).forEach(k => {
+    const [bx, ay] = k.split(":").map(Number);
+    const n = counts[k];
+    g.beginPath();
+    g.arc(X(bx), Y(ay), 2.6 + Math.min(5, Math.log2(n)*2.1), 0, 7);
+    g.fillStyle = colA; g.globalAlpha = .18 + Math.min(.5, n*0.12);
+    g.fill();
+    g.globalAlpha = 1; g.lineWidth = 1; g.strokeStyle = colA;
+    g.stroke();
+  });
+
+  // Regressionsgerade
+  if(res.r != null){
+    const n = res.xs.length;
+    const mx = res.ys.reduce((s,v)=>s+v,0)/n;
+    const my = res.xs.reduce((s,v)=>s+v,0)/n;
+    let sxy=0,sxx=0;
+    for(let i=0;i<n;i++){ const dx=res.ys[i]-mx, dy=res.xs[i]-my; sxy+=dx*dy; sxx+=dx*dx; }
+    if(sxx>0){
+      const b = sxy/sxx, a = my - b*mx;
+      g.strokeStyle = css("--ink"); g.globalAlpha=.55; g.lineWidth=1.6;
+      g.setLineDash([5,4]);
+      g.beginPath(); g.moveTo(X(1), Y(a+b*1)); g.lineTo(X(10), Y(a+b*10)); g.stroke();
+      g.setLineDash([]); g.globalAlpha=1;
+    }
+  }
+}
+
+/* ============================================================
+   Tab: Daten
+   ============================================================ */
+function renderData(){
+  const host = document.getElementById("paramEditor");
+  host.innerHTML = "";
+  if(!data.params.length){
+    host.innerHTML = '<div class="empty">Noch keine Parameter.</div>';
+  }
+  data.params.forEach((p,i) => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = '<span class="pen" style="background:'+penColor(i)+'"></span>';
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.value = p.name; inp.maxLength = 40;
+    inp.setAttribute("aria-label","Name von Parameter "+(i+1));
+    inp.addEventListener("change", () => {
+      p.name = inp.value.trim() || p.name; inp.value = p.name; queueSave(); renderAll();
+    });
+    row.appendChild(inp);
+    const kill = document.createElement("button");
+    kill.className = "kill"; kill.textContent = "entfernen";
+    kill.addEventListener("click", () => {
+      if(!confirm('"'+p.name+'" samt aller Werte entfernen?')) return;
+      data.params = data.params.filter(x => x.id !== p.id);
+      Object.keys(data.entries).forEach(k => {
+        delete data.entries[k][p.id];
+        if(!Object.keys(data.entries[k]).length) delete data.entries[k];
+      });
+      view.pair = null; queueSave(); renderAll(); toast("Parameter entfernt");
+    });
+    row.appendChild(kill);
+    host.appendChild(row);
+  });
+
+  const dl = document.getElementById("dayList");
+  const keys = Object.keys(data.entries).sort().reverse();
+  if(!keys.length){ dl.innerHTML = '<div class="empty">Noch keine Tage erfasst.</div>'; return; }
+  dl.innerHTML = "";
+  keys.slice(0,120).forEach(k => {
+    const b = document.createElement("button");
+    b.className = "day-row";
+    const vals = data.params.filter(p => data.entries[k][p.id] != null)
+      .map(p => p.name.slice(0,4) + " <b>" + data.entries[k][p.id] + "</b>").join(" ");
+    b.innerHTML = '<span class="d">'+shortDate(k)+fromKey(k).getFullYear().toString().slice(2)+'</span>'
+                + '<span class="v">'+vals+'</span>';
+    b.addEventListener("click", () => { view.date = k; switchTab("entry"); });
+    dl.appendChild(b);
+  });
+  if(keys.length > 120){
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = "Es werden die letzten 120 Tage gelistet, gespeichert sind " + keys.length + ".";
+    dl.appendChild(p);
+  }
+}
+
+/* ---------- CSV ---------- */
+function parseDate(s){
+  s = s.trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+"-"+m[2].padStart(2,"0")+"-"+m[3].padStart(2,"0");
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+  if(m) return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2})$/);
+  if(m) return "20"+m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
+  return null;
+}
+function splitLine(line, d){
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){
+    const c = line[i];
+    if(c === '"'){ if(q && line[i+1]==='"'){ cur+='"'; i++; } else q = !q; }
+    else if(c === d && !q){ out.push(cur); cur=""; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out.map(s => s.trim().replace(/^"|"$/g,""));
+}
+function importCSV(text){
+  const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length);
+  if(lines.length < 2){ toast("Datei enthält keine Daten"); return; }
+  const cands = [",",";","\t"];
+  const d = cands.reduce((best,c) =>
+    (lines[0].split(c).length > lines[0].split(best).length ? c : best), ",");
+
+  const header = splitLine(lines[0], d);
+  let start = 1;
+  if(parseDate(header[0])){ start = 0; }   // keine Kopfzeile
+
+  const colNames = start === 1
+    ? header.slice(1)
+    : header.slice(1).map((_,i) => "Spalte " + (i+2));
+
+  // Spalten auf Parameter abbilden
+  const map = colNames.map(name => {
+    const clean = name.trim();
+    let p = data.params.find(x => x.name.toLowerCase() === clean.toLowerCase());
+    if(!p && clean){ p = { id: uid(), name: clean }; data.params.push(p); }
+    return p ? p.id : null;
+  });
+
+  let days = 0, values = 0, skipped = 0;
+  for(let i=start; i<lines.length; i++){
+    const cells = splitLine(lines[i], d);
+    const key = parseDate(cells[0] || "");
+    if(!key){ skipped++; continue; }
+    let touched = false;
+    for(let c=1; c<cells.length; c++){
+      const pid = map[c-1];
+      if(!pid) continue;
+      const raw = (cells[c]||"").replace(",",".").trim();
+      if(raw === "") continue;
+      let v = parseFloat(raw);
+      if(!isFinite(v)) continue;
+      v = Math.round(v);
+      if(v < 1 || v > 10) continue;
+      if(!data.entries[key]) data.entries[key] = {};
+      data.entries[key][pid] = v;
+      values++; touched = true;
+    }
+    if(touched) days++;
+  }
+  Store.save(data);
+  renderAll();
+  toast(values + " Werte an " + days + " Tagen eingelesen");
+  if(skipped) setTimeout(()=>toast(skipped + " Zeilen ohne lesbares Datum übersprungen"), 2100);
+}
+function exportCSV(){
+  const keys = Object.keys(data.entries).sort();
+  const head = ["Datum"].concat(data.params.map(p => p.name));
+  const rows = [head.join(";")];
+  keys.forEach(k => {
+    rows.push([k].concat(data.params.map(p => {
+      const v = data.entries[k][p.id]; return v == null ? "" : v;
+    })).join(";"));
+  });
+  const blob = new Blob(["\ufeff" + rows.join("\r\n")], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "pegel_" + todayKey() + ".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  toast("CSV gesichert");
+}
+
+/* ============================================================
+   Gerüst
+   ============================================================ */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function updateHeader(){
+  const n = Object.keys(data.entries).length;
+  document.getElementById("headerMeta").textContent =
+    n ? n + " Tage · " + data.params.length + " Parameter" : data.params.length + " Parameter";
+}
+function switchTab(name){
+  view.tab = name;
+  ["entry","trend","data"].forEach(t => {
+    document.getElementById("tab-"+t).hidden = (t !== name);
+  });
+  document.querySelectorAll("nav button").forEach(b =>
+    b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  window.scrollTo(0,0);
+  if(name === "trend") renderTrend();
+  if(name === "data") renderData();
+  if(name === "entry") renderEntry();
+}
+function renderAll(){
+  updateHeader();
+  if(view.tab === "entry") renderEntry();
+  if(view.tab === "trend") renderTrend();
+  if(view.tab === "data") renderData();
+}
+
+/* ---------- Installierbarkeit ---------- */
+function installManifest(){
+  try{
+    const icon =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">' +
+      '<rect width="192" height="192" fill="#E8E9E3"/>' +
+      '<path d="M24 150V42M24 150h144" stroke="#161A17" stroke-width="6" fill="none"/>' +
+      '<path d="M40 118l30-34 22 20 40-56" stroke="#C1272D" stroke-width="9" fill="none" stroke-linejoin="round"/>' +
+      '</svg>';
+    const mf = {
+      name:"Pegel", short_name:"Pegel", start_url:".", scope:".",
+      display:"standalone", background_color:"#E8E9E3", theme_color:"#E8E9E3",
+      icons:[{ src:"data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(icon))),
+               sizes:"192x192", type:"image/svg+xml", purpose:"any" }]
+    };
+    const link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = URL.createObjectURL(new Blob([JSON.stringify(mf)], {type:"application/manifest+json"}));
+    document.head.appendChild(link);
+  }catch(e){ /* nicht kritisch */ }
+}
+
+/* ---------- Verdrahtung ---------- */
+document.querySelectorAll("nav button").forEach(b =>
+  b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+document.getElementById("dayPrev").addEventListener("click", () => {
+  view.date = shiftKey(view.date, -1); renderEntry();
+});
+document.getElementById("dayNext").addEventListener("click", () => {
+  if(view.date >= todayKey()) return;
+  view.date = shiftKey(view.date, 1); renderEntry();
+});
+document.getElementById("datePick").addEventListener("change", e => {
+  if(e.target.value){ view.date = e.target.value; renderEntry(); }
+});
+document.getElementById("rangeCtl").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(!b) return;
+  view.range = Number(b.dataset.range); renderTrend();
+});
+document.getElementById("maCtl").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(!b) return;
+  view.ma = Number(b.dataset.ma); renderTrend();
+});
+document.getElementById("addParam").addEventListener("click", () => {
+  if(data.params.length >= 8){ toast("Mehr als acht Stifte hat der Plotter nicht"); return; }
+  const name = prompt("Name des Parameters");
+  if(!name || !name.trim()) return;
+  data.params.push({ id: uid(), name: name.trim() });
+  queueSave(); renderAll();
+});
+document.getElementById("importBtn").addEventListener("click", () =>
+  document.getElementById("fileInput").click());
+document.getElementById("fileInput").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = () => importCSV(String(r.result));
+  r.onerror = () => toast("Datei konnte nicht gelesen werden");
+  r.readAsText(f, "utf-8");
+  e.target.value = "";
+});
+document.getElementById("exportBtn").addEventListener("click", exportCSV);
+
+let rz = null;
+window.addEventListener("resize", () => {
+  clearTimeout(rz);
+  rz = setTimeout(() => { if(view.tab === "trend") renderTrend(); }, 180);
+});
+
+/* ---------- Start ---------- */
+(async function init(){
+  /* Manifest liegt jetzt als echte Datei vor */
+  const stored = await Store.load();
+  if(stored && stored.params){
+    data = stored;
+    if(!data.entries) data.entries = {};
+  }else{
+    data.params = DEFAULT_PARAMS.map(n => ({ id: uid(), name: n }));
+    await Store.save(data);
+  }
+  switchTab("entry");
+  if("serviceWorker" in navigator){
+    try{ navigator.serviceWorker.register("sw.js"); }catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
