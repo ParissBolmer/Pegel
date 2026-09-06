@@ -1,276 +1,436 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#E8E9E3">
+<meta name="theme-color" content="#E8E9E3" id="themeColor">
 <title>Pegel</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
+/* ============================================================
+   Pegel — Tageswerte auf Millimeterpapier.
+   Ein Aufzeichnungsgerät, kein Punktekonto: keine Serien,
+   keine Abzeichen, keine Belohnung fürs Lückenlose.
+   ============================================================ */
+
 :root{
+  color-scheme:light;
+
   --paper:#E8E9E3;
-  --panel:#F5F6F1;
+  --panel:#F2F3EC;
+  --sunken:#DCDED3;
   --ink:#161A17;
-  --ink-2:#5A6159;
-  --ink-3:#8A9188;
-  --grid:#CDD0C6;
-  --rule:#B9BEB2;
-  --pen-0:#161A17;
-  --pen-1:#C1272D;
+  --ink-2:#565D55;
+  --ink-3:#878E85;
+  --rule:#C2C7BA;
+  --hair:#D6D9CD;
+  --grid:#CED2C5;
+  --veil:rgba(22,26,23,.34);
+  --lift:0 1px 0 rgba(22,26,23,.06);
+  --on-pen:#FFFFFF;
+
+  --pen-0:#2B302C;
+  --pen-1:#BC2A30;
   --pen-2:#1F4EA1;
-  --pen-3:#1E7A3C;
-  --pen-4:#A6238F;
-  --pen-5:#D2691E;
-  --pen-6:#0E7E8C;
-  --pen-7:#7A4A21;
-  --mono:ui-monospace,"Roboto Mono","SF Mono",Menlo,Consolas,monospace;
+  --pen-3:#1C7439;
+  --pen-4:#97247F;
+  --pen-5:#BE6318;
+  --pen-6:#0C6F80;
+  --pen-7:#74461F;
+
+  --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --nav-h:58px;
+
+  --nav-h:60px;
+  --gut:17px;
+  --r:3px;
 }
+
+[data-theme="dark"]{
+  color-scheme:dark;
+
+  --paper:#141714;
+  --panel:#1C201C;
+  --sunken:#0E110E;
+  --ink:#E7E9E2;
+  --ink-2:#A3AA9E;
+  --ink-3:#767D73;
+  --rule:#333A33;
+  --hair:#272D27;
+  --grid:#252B25;
+  --veil:rgba(0,0,0,.62);
+  --lift:none;
+  --on-pen:#0E110E;
+
+  --pen-0:#D7DAD2;
+  --pen-1:#E4626A;
+  --pen-2:#6F9BEA;
+  --pen-3:#4FB877;
+  --pen-4:#D683C6;
+  --pen-5:#E29B57;
+  --pen-6:#3FBACB;
+  --pen-7:#C3906B;
+}
+
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
   background:var(--paper);
   color:var(--ink);
   font-family:var(--sans);
-  font-size:15px;
+  font-size:16px;
   line-height:1.45;
+  -webkit-font-smoothing:antialiased;
   padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
   overscroll-behavior-y:contain;
 }
 button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
-input,select{font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
 
 /* ---------- Kopfleiste ---------- */
 header{
-  position:sticky;top:0;z-index:20;
+  position:sticky;top:0;z-index:30;
   background:var(--paper);
   border-bottom:1px solid var(--rule);
-  padding:calc(10px + env(safe-area-inset-top)) 16px 8px;
-  display:flex;align-items:baseline;gap:12px;
+  padding:calc(11px + env(safe-area-inset-top)) var(--gut) 10px;
+  display:flex;align-items:center;gap:11px;
 }
+.mark{display:flex;align-items:flex-end;gap:2px;height:15px}
+.mark i{display:block;width:3px;background:var(--ink-3);border-radius:1px}
+.mark i:nth-child(1){height:5px}
+.mark i:nth-child(2){height:9px}
+.mark i:nth-child(3){height:15px;background:var(--pen-1)}
+.mark i:nth-child(4){height:8px}
 .wordmark{
   font-family:var(--mono);font-size:13px;font-weight:700;
-  letter-spacing:.34em;text-transform:uppercase;
+  letter-spacing:.30em;text-transform:uppercase;
 }
-.header-meta{
-  margin-left:auto;font-family:var(--mono);font-size:11px;
-  letter-spacing:.08em;color:var(--ink-3);text-align:right;
+.head-act{margin-left:auto;display:flex;gap:2px}
+.icon-btn{
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+  color:var(--ink-2);border-radius:var(--r);
 }
+.icon-btn:active{background:var(--panel)}
+.icon-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
-main{padding:0 16px 28px}
+main{padding:0 var(--gut) 34px}
 section[hidden]{display:none}
 
-.eyebrow{
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
-  text-transform:uppercase;color:var(--ink-3);
-  margin:26px 0 10px;display:flex;align-items:center;gap:10px;
+/* ---------- Abschnittsüberschrift ---------- */
+.sec{
+  display:flex;align-items:center;gap:11px;
+  margin:30px 0 12px;
+  font-size:13px;font-weight:600;letter-spacing:.005em;color:var(--ink-2);
 }
-.eyebrow::after{content:"";flex:1;height:1px;background:var(--rule)}
-.eyebrow:first-child{margin-top:18px}
+.sec::after{content:"";flex:1;height:1px;background:var(--hair)}
+.sec:first-child{margin-top:20px}
+.sec .note{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:400}
 
-/* ---------- Datumszeile ---------- */
-.datebar{
-  display:flex;align-items:center;gap:6px;margin-top:16px;
-  border:1px solid var(--rule);background:var(--panel);
+/* ============================================================
+   Eintrag
+   ============================================================ */
+
+/* Wochenband */
+.weekbar{display:flex;gap:3px;margin-top:16px}
+.wd{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:8px 0 7px;border:1px solid transparent;border-radius:var(--r);
+  color:var(--ink-3);
 }
-.datebar button.step{
-  width:44px;height:44px;font-family:var(--mono);font-size:17px;
-  color:var(--ink-2);flex:none;
+.wd .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase}
+.wd .n{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.wd .m{
+  width:100%;height:4px;border-radius:2px;background:var(--grid);
+  position:relative;overflow:hidden;
 }
-.datebar button.step:disabled{color:var(--grid)}
-.datebar .dateface{
-  flex:1;text-align:center;font-family:var(--mono);
-  font-size:15px;letter-spacing:.04em;position:relative;
+.wd .m i{position:absolute;left:0;top:0;bottom:0;background:var(--ink-2);border-radius:2px}
+.wd[aria-current="date"] .m i{background:var(--ink)}
+.wd[aria-current="date"]{border-color:var(--ink);background:var(--panel)}
+.wd[aria-current="date"] .n{color:var(--ink);font-weight:700}
+.wd[data-today="1"] .l{color:var(--pen-1)}
+.wd[disabled]{opacity:.34}
+
+.daybar{
+  display:flex;align-items:center;gap:10px;
+  margin-top:14px;padding-bottom:2px;
 }
-.datebar .dateface .weekday{
-  display:block;font-size:10px;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--ink-3);margin-bottom:1px;
+.daybar h2{
+  margin:0;font-size:19px;font-weight:600;letter-spacing:-.015em;
 }
-.datebar input[type=date]{
-  position:absolute;inset:0;opacity:0;width:100%;height:100%;
+.daybar .sub{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.daybar .pick{position:relative;flex:1;min-width:0;text-align:left}
+.daybar .pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:none}
+.daybar .step{
+  width:38px;height:38px;flex:none;border:1px solid var(--rule);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-2);background:var(--panel);
+}
+.daybar .step:disabled{opacity:.3}
+.daybar .step svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.today-btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--rule);border-radius:var(--r);padding:9px 11px;color:var(--ink-2);
+  background:var(--panel);flex:none;
 }
 
-/* ---------- Parameter-Zeilen ---------- */
-.param{margin:18px 0 0}
-.param-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
-.pen{width:9px;height:9px;flex:none;transform:translateY(-1px)}
-.param-name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+/* Parameterzeile mit Pegel-Skala */
+.param{margin-top:22px}
+.param-head{display:flex;align-items:baseline;gap:9px;margin-bottom:8px}
+.dot-pen{width:9px;height:9px;border-radius:2px;flex:none;transform:translateY(-1px)}
+.param-name{font-size:16px;font-weight:600;letter-spacing:-.012em;flex:1;min-width:0}
+.param-ctx{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
 .param-val{
-  margin-left:auto;font-family:var(--mono);font-size:19px;
-  font-weight:700;font-variant-numeric:tabular-nums;
+  font-family:var(--mono);font-size:25px;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1;min-width:38px;text-align:right;
 }
 .param-val.empty{color:var(--grid);font-weight:400}
-.scale{display:flex;gap:2px}
-.scale button{
-  flex:1;height:42px;background:var(--panel);
-  border:1px solid var(--rule);
-  font-family:var(--mono);font-size:12px;color:var(--ink-3);
-  display:flex;align-items:flex-end;justify-content:center;
-  padding-bottom:4px;transition:background .11s,color .11s;
-}
-.scale button[aria-pressed="true"]{
-  background:var(--tint);color:#fff;border-color:var(--tint);font-weight:700;
-}
-.scale button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 
-.saved-note{
-  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);margin-top:22px;
-  display:flex;align-items:center;gap:8px;
+.track{
+  position:relative;display:flex;gap:2px;height:50px;
+  border:1px solid var(--rule);border-radius:var(--r);
+  background:var(--sunken);overflow:hidden;
+  touch-action:pan-y;user-select:none;-webkit-user-select:none;
 }
-.dot{width:6px;height:6px;background:var(--pen-3);flex:none}
+.track s{flex:1;display:block;text-decoration:none;position:relative;background:transparent}
+.track s+s{box-shadow:-2px 0 0 var(--panel)}
+[data-theme="dark"] .track s+s{box-shadow:-2px 0 0 var(--paper)}
+.track .avg{
+  position:absolute;top:0;bottom:0;width:0;
+  border-left:1px dashed var(--ink-2);opacity:.5;pointer-events:none;
+}
+.track.armed{border-color:var(--ink)}
 
-/* ---------- Steuerelemente ---------- */
-.controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ruler{
+  display:flex;margin-top:5px;font-family:var(--mono);font-size:9.5px;
+  color:var(--ink-3);font-variant-numeric:tabular-nums;
+}
+.ruler span{flex:1;text-align:center}
+.ruler span.q{color:transparent}
+
+/* Notiz */
+.notefield{
+  width:100%;margin-top:10px;padding:12px 13px;min-height:78px;resize:vertical;
+  background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);
+  font-size:15px;line-height:1.5;
+}
+.notefield::placeholder{color:var(--ink-3)}
+.notefield:focus{outline:none;border-color:var(--ink)}
+
+.status{
+  display:flex;align-items:center;gap:9px;margin-top:20px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--ink-3);
+}
+.status .bead{width:6px;height:6px;border-radius:50%;background:var(--pen-3);flex:none}
+
+/* ============================================================
+   Verlauf
+   ============================================================ */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
 .chip{
-  font-family:var(--mono);font-size:11px;letter-spacing:.08em;
-  padding:7px 11px;border:1px solid var(--rule);background:var(--panel);
-  color:var(--ink-2);text-transform:uppercase;
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  padding:8px 11px;border:1px solid var(--rule);border-radius:var(--r);
+  background:var(--panel);color:var(--ink-2);
 }
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.chip:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 
-.legend{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0 0}
-.legend button{
-  display:flex;align-items:center;gap:6px;
-  border:1px solid var(--rule);background:var(--panel);
-  padding:6px 9px;font-size:12.5px;
-}
-.legend button[aria-pressed="false"]{opacity:.4}
-.legend .pen{width:14px;height:3px;transform:none}
-
-/* ---------- Diagramm ---------- */
 .plot{
-  margin-top:12px;border:1px solid var(--rule);background:var(--panel);
-  position:relative;
+  margin-top:13px;border:1px solid var(--rule);background:var(--panel);
+  border-radius:var(--r);position:relative;overflow:hidden;
 }
 .plot canvas{display:block;width:100%;touch-action:pan-y}
+.readout{
+  position:absolute;top:8px;pointer-events:none;
+  background:var(--paper);border:1px solid var(--ink);border-radius:var(--r);
+  padding:7px 9px;font-family:var(--mono);font-size:10.5px;line-height:1.55;
+  box-shadow:0 2px 10px var(--veil);opacity:0;
+  transition:opacity .12s,left .12s;max-width:56%;
+}
+.readout.on{opacity:1}
+.readout .rd{font-weight:700;letter-spacing:.04em;margin-bottom:3px}
+.readout div span{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}
 .plot-foot{
   display:flex;justify-content:space-between;
-  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
-  color:var(--ink-3);padding:6px 9px;border-top:1px solid var(--rule);
-  text-transform:uppercase;
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  color:var(--ink-3);padding:7px 10px;border-top:1px solid var(--hair);
 }
 
-/* ---------- Korrelationsmatrix ---------- */
-.matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px}
-table.matrix{border-collapse:collapse;font-family:var(--mono);font-size:11px}
-table.matrix th{
-  font-weight:400;color:var(--ink-2);padding:4px 6px;
-  text-align:right;white-space:nowrap;font-size:10.5px;
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.legend button{
+  display:flex;align-items:center;gap:7px;
+  border:1px solid var(--rule);border-radius:var(--r);background:var(--panel);
+  padding:7px 10px;font-size:13.5px;
 }
-table.matrix th.col{
-  text-align:center;writing-mode:vertical-rl;transform:rotate(180deg);
-  height:74px;vertical-align:bottom;padding:6px 2px;
-}
-table.matrix td{
-  width:42px;height:38px;text-align:center;
-  border:1px solid var(--paper);font-variant-numeric:tabular-nums;
-  font-weight:600;
-}
-table.matrix td.self{background:transparent;color:var(--grid);font-weight:400}
-table.matrix td.blank{background:transparent}
-table.matrix td button{width:100%;height:100%;font:inherit;color:inherit}
+.legend button[aria-pressed="false"]{opacity:.38}
+.legend .bar{width:15px;height:3px;border-radius:2px;flex:none}
 
-.detail{
-  margin-top:14px;border:1px solid var(--rule);background:var(--panel);padding:13px;
+/* Kennzahlen */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.stat{
+  border:1px solid var(--rule);border-radius:var(--r);background:var(--panel);
+  padding:11px 12px;
 }
-.detail h3{
-  margin:0 0 3px;font-size:14px;font-weight:600;letter-spacing:-.01em;
+.stat .n{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;margin-bottom:7px}
+.stat .n i{width:8px;height:8px;border-radius:2px;flex:none;display:block}
+.stat .v{
+  font-family:var(--mono);font-size:23px;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1;
 }
-.detail .r-line{
-  font-family:var(--mono);font-size:11.5px;color:var(--ink-2);
-  letter-spacing:.05em;margin-bottom:11px;
+.stat .d{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:5px}
+.stat .d.up{color:var(--pen-3)}
+.stat .d.down{color:var(--pen-1)}
+
+/* Zusammenhänge */
+.find{
+  border:1px solid var(--rule);border-radius:var(--r);background:var(--panel);
+  padding:13px;margin-top:8px;width:100%;text-align:left;display:block;
 }
-.lagbars{display:flex;align-items:flex-end;gap:3px;height:66px;margin-bottom:5px}
-.lagbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative}
-.lagbar i{display:block;background:var(--ink-3)}
+.find .pair{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap}
+.find .pair b{font-size:14px;font-weight:600}
+.find .pair i{width:8px;height:8px;border-radius:2px;flex:none;display:block}
+.find .pair em{font-style:normal;color:var(--ink-3);font-family:var(--mono);font-size:11px}
+.find .say{font-size:14px;line-height:1.5;color:var(--ink-2)}
+.find .meter{display:flex;align-items:center;gap:9px;margin-top:9px}
+.find .meter .bar{
+  flex:1;height:5px;border-radius:3px;background:var(--sunken);overflow:hidden;position:relative;
+}
+.find .meter .bar i{position:absolute;top:0;bottom:0;left:0;border-radius:3px;display:block}
+.find .meter .lab{
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.find[aria-expanded="true"]{border-color:var(--ink)}
+
+.deep{
+  border:1px solid var(--ink);border-top:none;border-radius:0 0 var(--r) var(--r);
+  background:var(--panel);padding:13px;margin-top:-1px;
+}
+.deep canvas{display:block;width:100%}
+.lagbars{display:flex;align-items:flex-end;gap:3px;height:60px;margin-bottom:5px}
+.lagbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.lagbar i{display:block;background:var(--ink-3);border-radius:1px 1px 0 0}
 .lagbar.pos i{background:var(--pen-2)}
 .lagbar.neg i{background:var(--pen-1)}
-.lagbar.best i{outline:1px solid var(--ink)}
+.lagbar.best i{outline:1.5px solid var(--ink);outline-offset:-1px}
 .laglabels{display:flex;gap:3px;font-family:var(--mono);font-size:9px;color:var(--ink-3)}
 .laglabels span{flex:1;text-align:center}
 
-/* ---------- Daten-Tab ---------- */
+/* ============================================================
+   Daten
+   ============================================================ */
 .row{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 0;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;gap:9px;
+  padding:9px 0;border-bottom:1px solid var(--hair);
 }
 .row:last-of-type{border-bottom:none}
 .row input[type=text]{
   flex:1;min-width:0;background:transparent;border:none;
-  border-bottom:1px dashed var(--rule);padding:3px 0;font-size:14.5px;
+  border-bottom:1px dashed transparent;padding:5px 0;font-size:15.5px;
 }
 .row input[type=text]:focus{outline:none;border-bottom-color:var(--ink)}
-.row .kill{
-  font-family:var(--mono);font-size:11px;color:var(--ink-3);
-  padding:6px 8px;letter-spacing:.06em;
+.row .mini{
+  width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;
+  color:var(--ink-3);border-radius:var(--r);
 }
-.row .kill:hover{color:var(--pen-1)}
+.row .mini:disabled{opacity:.22}
+.row .mini svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.row .mini.del:active{color:var(--pen-1)}
+
 .day-row{
-  display:flex;align-items:center;gap:12px;padding:9px 0;
-  border-bottom:1px solid var(--rule);width:100%;text-align:left;
+  display:flex;align-items:center;gap:11px;padding:10px 0;
+  border-bottom:1px solid var(--hair);width:100%;text-align:left;
 }
-.day-row .d{font-family:var(--mono);font-size:12px;color:var(--ink-2);flex:none;width:76px}
-.day-row .v{
-  font-family:var(--mono);font-size:11.5px;color:var(--ink-3);
-  display:flex;gap:6px;flex-wrap:wrap;
-}
-.day-row .v b{font-weight:600;color:var(--ink)}
+.day-row .d{font-family:var(--mono);font-size:12px;color:var(--ink-2);flex:none;width:74px}
+.day-row .v{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.day-row .v b{font-weight:700;color:var(--ink)}
+.day-row .pin{width:13px;height:13px;flex:none;color:var(--ink-3)}
+.day-row .pin svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8}
 
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
-  text-transform:uppercase;padding:12px 16px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-size:14px;font-weight:600;padding:12px 16px;border-radius:var(--r);
   border:1px solid var(--ink);background:var(--ink);color:var(--paper);
 }
-.btn.ghost{background:transparent;color:var(--ink)}
-.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn.ghost{background:var(--panel);color:var(--ink);border-color:var(--rule)}
+.btn.danger{background:transparent;color:var(--pen-1);border-color:var(--pen-1)}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.btn-row.two{display:grid;grid-template-columns:1fr 1fr}
 
-.hint{font-size:13px;color:var(--ink-2);margin:8px 0 0;line-height:1.5}
-.hint code{font-family:var(--mono);font-size:12px;background:var(--panel);padding:1px 4px;border:1px solid var(--rule)}
-.empty{
-  font-family:var(--mono);font-size:12px;color:var(--ink-3);
-  border:1px dashed var(--rule);padding:22px 16px;text-align:center;
-  letter-spacing:.06em;line-height:1.7;
+.hint{font-size:13.5px;color:var(--ink-2);margin:9px 0 0;line-height:1.55;max-width:62ch}
+.hint code{
+  font-family:var(--mono);font-size:12px;background:var(--panel);
+  padding:1px 5px;border:1px solid var(--hair);border-radius:2px;
 }
+.empty{
+  border:1px dashed var(--rule);border-radius:var(--r);
+  padding:24px 18px;text-align:center;color:var(--ink-2);
+  font-size:14px;line-height:1.6;
+}
+.empty b{display:block;font-size:15px;color:var(--ink);margin-bottom:4px}
 
 /* ---------- Navigation ---------- */
 nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
   height:calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);
-  background:var(--paper);border-top:1px solid var(--rule);
-  display:flex;
+  background:var(--paper);border-top:1px solid var(--rule);display:flex;
 }
 nav button{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:4px;
-  font-family:var(--mono);font-size:10px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--ink-3);position:relative;
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  font-size:11px;letter-spacing:.02em;color:var(--ink-3);position:relative;
 }
 nav button[aria-selected="true"]{color:var(--ink)}
 nav button[aria-selected="true"]::before{
-  content:"";position:absolute;top:-1px;left:0;right:0;height:2px;background:var(--ink);
+  content:"";position:absolute;top:-1px;left:22%;right:22%;height:2px;background:var(--ink);
 }
-nav svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5}
+nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
+/* ---------- Hinweis unten ---------- */
 .toast{
-  position:fixed;left:50%;transform:translateX(-50%) translateY(14px);
-  bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
-  background:var(--ink);color:var(--paper);
-  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
-  padding:10px 16px;text-transform:uppercase;z-index:40;
-  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  position:fixed;left:12px;right:12px;
+  bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
+  background:var(--ink);color:var(--paper);border-radius:var(--r);
+  font-size:14px;padding:12px 14px;z-index:60;
+  display:flex;align-items:center;gap:12px;
+  opacity:0;transform:translateY(10px);pointer-events:none;
+  transition:opacity .18s,transform .18s;
+  box-shadow:0 4px 18px var(--veil);
 }
-.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.on{opacity:1;transform:translateY(0);pointer-events:auto}
+.toast .undo{
+  margin-left:auto;flex:none;font-family:var(--mono);font-size:11px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--paper);
+  border:1px solid var(--paper);border-radius:2px;padding:6px 10px;
+}
+
+/* ---------- Blatt (Dialog) ---------- */
+.veil{
+  position:fixed;inset:0;background:var(--veil);z-index:70;
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .18s;
+}
+.veil.on{opacity:1;pointer-events:auto}
+.sheet{
+  width:100%;max-width:520px;background:var(--paper);
+  border-top:1px solid var(--rule);border-radius:10px 10px 0 0;
+  padding:20px var(--gut) calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(14px);transition:transform .18s;
+}
+.veil.on .sheet{transform:translateY(0)}
+.sheet h3{margin:0 0 6px;font-size:17px;font-weight:600;letter-spacing:-.015em}
+.sheet p{margin:0 0 14px;font-size:14.5px;color:var(--ink-2);line-height:1.5}
+.sheet input[type=text]{
+  width:100%;padding:12px 13px;background:var(--panel);
+  border:1px solid var(--rule);border-radius:var(--r);font-size:16px;
+}
+.sheet input[type=text]:focus{outline:none;border-color:var(--ink)}
+.sheet .acts{display:flex;gap:8px;margin-top:16px}
+.sheet .acts .btn{flex:1}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important;animation-duration:.01ms !important}
@@ -280,41 +440,60 @@ nav svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5}
 <body>
 
 <header>
+  <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
   <span class="wordmark">Pegel</span>
-  <span class="header-meta" id="headerMeta"></span>
+  <span class="head-act">
+    <button class="icon-btn" id="themeBtn" aria-label="Darstellung wechseln">
+      <svg id="themeIcon" viewBox="0 0 24 24"></svg>
+    </button>
+  </span>
 </header>
 
 <main>
 
 <!-- ============ EINTRAG ============ -->
 <section id="tab-entry">
-  <div class="datebar">
-    <button class="step" id="dayPrev" aria-label="Vorheriger Tag">&#8249;</button>
-    <div class="dateface">
-      <span class="weekday" id="dfWeekday"></span>
-      <span id="dfDate"></span>
+  <div class="weekbar" id="weekbar"></div>
+
+  <div class="daybar">
+    <button class="step" id="dayPrev" aria-label="Vorheriger Tag">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="pick">
+      <h2 id="dfDate"></h2>
+      <div class="sub" id="dfSub"></div>
       <input type="date" id="datePick" aria-label="Datum wählen">
     </div>
-    <button class="step" id="dayNext" aria-label="Nächster Tag">&#8250;</button>
+    <button class="today-btn" id="todayBtn" hidden>Heute</button>
+    <button class="step" id="dayNext" aria-label="Nächster Tag">
+      <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
   </div>
 
   <div id="entryList"></div>
-  <div class="saved-note" id="savedNote" hidden><span class="dot"></span><span id="savedText"></span></div>
+
+  <div id="noteBlock" hidden>
+    <div class="sec">Notiz</div>
+    <textarea class="notefield" id="dayNote" rows="3"
+      placeholder="Was war heute? Ein Satz reicht."></textarea>
+  </div>
+
+  <div class="status" id="status" hidden><span class="bead"></span><span id="statusText"></span></div>
 </section>
 
-<!-- ============ TREND ============ -->
+<!-- ============ VERLAUF ============ -->
 <section id="tab-trend" hidden>
-  <div class="eyebrow">Zeitraum</div>
-  <div class="controls" id="rangeCtl">
+  <div class="sec">Zeitraum</div>
+  <div class="chips" id="rangeCtl">
     <button class="chip" data-range="30">30 Tage</button>
     <button class="chip" data-range="90">90 Tage</button>
     <button class="chip" data-range="365">1 Jahr</button>
     <button class="chip" data-range="0">Alles</button>
   </div>
 
-  <div class="eyebrow">Gleitendes Mittel</div>
-  <div class="controls" id="maCtl">
-    <button class="chip" data-ma="1">Aus</button>
+  <div class="sec">Glättung <span class="note" id="maNote"></span></div>
+  <div class="chips" id="maCtl">
+    <button class="chip" data-ma="1">Rohwerte</button>
     <button class="chip" data-ma="3">3 Tage</button>
     <button class="chip" data-ma="7">7 Tage</button>
     <button class="chip" data-ma="14">14 Tage</button>
@@ -323,45 +502,60 @@ nav svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5}
 
   <div class="plot">
     <canvas id="chart" height="480"></canvas>
+    <div class="readout" id="readout"></div>
     <div class="plot-foot"><span id="chartFrom"></span><span id="chartTo"></span></div>
   </div>
   <div class="legend" id="legend"></div>
 
-  <div class="eyebrow">Korrelationen</div>
-  <div id="matrixHost"></div>
-  <div id="detailHost"></div>
+  <div class="sec">Mittelwerte</div>
+  <div class="stats" id="stats"></div>
+
+  <div class="sec">Zusammenhänge</div>
+  <div id="findings"></div>
 </section>
 
 <!-- ============ DATEN ============ -->
 <section id="tab-data" hidden>
-  <div class="eyebrow">Parameter</div>
+  <div class="sec">Was du erfasst</div>
   <div id="paramEditor"></div>
   <div class="btn-row">
     <button class="btn ghost" id="addParam">Parameter hinzufügen</button>
   </div>
 
-  <div class="eyebrow">Import und Export</div>
-  <p class="hint">CSV mit Datum in der ersten Spalte, danach je Parameter eine Spalte. Erkannt werden <code>2026-08-14</code> und <code>14.08.2026</code>, Trennzeichen Komma, Semikolon oder Tab. Spalten mit unbekanntem Namen werden als neue Parameter angelegt.</p>
-  <div class="btn-row">
-    <button class="btn" id="importBtn">CSV einlesen</button>
-    <button class="btn ghost" id="exportBtn">CSV sichern</button>
+  <div class="sec">Sicherung</div>
+  <p class="hint">Deine Einträge liegen nur auf diesem Gerät. Lade dir ab und zu eine Kopie herunter — die Sicherung enthält alles, die Tabelle lässt sich auch in Excel öffnen.</p>
+  <div class="btn-row two">
+    <button class="btn" id="exportJson">Sichern</button>
+    <button class="btn ghost" id="importJson">Einspielen</button>
   </div>
+  <div class="btn-row two">
+    <button class="btn ghost" id="exportBtn">CSV laden</button>
+    <button class="btn ghost" id="importBtn">CSV lesen</button>
+  </div>
+  <p class="hint">CSV: Datum in der ersten Spalte, danach je Parameter eine Spalte. Erkannt werden <code>2026-08-14</code> und <code>14.08.2026</code>; Komma, Semikolon oder Tabulator als Trenner. Unbekannte Spaltennamen werden als neue Parameter angelegt.</p>
   <input type="file" id="fileInput" accept=".csv,.txt,text/csv,text/plain" hidden>
+  <input type="file" id="jsonInput" accept=".json,application/json" hidden>
 
-  <div class="eyebrow">Erfasste Tage</div>
+  <div class="sec">Erfasste Tage <span class="note" id="dayCount"></span></div>
   <div id="dayList"></div>
+
+  <div class="sec">Zurücksetzen</div>
+  <p class="hint">Löscht alle Einträge und Parameter auf diesem Gerät. Lässt sich nicht rückgängig machen — vorher eine Sicherung laden.</p>
+  <div class="btn-row">
+    <button class="btn danger" id="wipeBtn">Alles löschen</button>
+  </div>
 </section>
 
 </main>
 
 <nav role="tablist">
   <button role="tab" data-tab="entry" aria-selected="true">
-    <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h9"/><circle cx="18" cy="19" r="2.4"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M5 19V9M10 19V5M15 19v-7M20 19v-4M3 21h18"/></svg>
     Eintrag
   </button>
   <button role="tab" data-tab="trend" aria-selected="false">
     <svg viewBox="0 0 24 24"><path d="M3 20V4M3 20h18"/><path d="M6 15l4-5 3 3 5-8"/></svg>
-    Trend
+    Verlauf
   </button>
   <button role="tab" data-tab="data" aria-selected="false">
     <svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg>
@@ -369,14 +563,17 @@ nav svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5}
   </button>
 </nav>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast"><span id="toastText"></span></div>
 
+<div class="veil" id="veil">
+  <div class="sheet" role="dialog" aria-modal="true" id="sheet"></div>
+</div>
 <script>
 "use strict";
 
 /* ============================================================
-   Speicher — nutzt window.storage im Claude-Artefakt,
-   sonst localStorage auf dem Handy. Gleiche Datei, beide Orte.
+   Speicher — window.storage im Claude-Artefakt, sonst
+   localStorage auf dem Gerät. Format bleibt zu v1 kompatibel.
    ============================================================ */
 const KEY = "pegel:v1";
 const Store = {
@@ -394,7 +591,8 @@ const Store = {
     if(this.hasNative()){
       try{ await window.storage.set(KEY, s); return true; }catch(e){ return false; }
     }
-    try{ localStorage.setItem(KEY, s); return true; }catch(e){ return false; }
+    try{ localStorage.setItem(KEY, s); return true; }
+    catch(e){ toast("Speicher voll — bitte eine Sicherung laden und alte Tage löschen"); return false; }
   }
 };
 
@@ -402,95 +600,327 @@ const PENS = ["--pen-0","--pen-1","--pen-2","--pen-3","--pen-4","--pen-5","--pen
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const penColor = i => css(PENS[i % PENS.length]);
 
+function rgba(hex, a){
+  const h = hex.replace("#","").trim();
+  const f = h.length === 3 ? h.split("").map(c=>c+c).join("") : h;
+  const n = parseInt(f, 16);
+  return "rgba(" + ((n>>16)&255) + "," + ((n>>8)&255) + "," + (n&255) + "," + a + ")";
+}
+
 /* ---------- Zustand ---------- */
-let data = { params: [], entries: {} };
+let data = { params: [], entries: {}, notes: {} };
 let view = { tab:"entry", date: todayKey(), range: 90, ma: 7, hidden: {}, pair: null };
-let saveTimer = null;
+let saveTimer = null, noteTimer = null;
 
 const DEFAULT_PARAMS = ["Schlaf","Energie","Konzentration","Stimmung","Bewegung","Stress"];
 
-/* ---------- Datumshilfen ---------- */
+/* ---------- Datum ---------- */
 function todayKey(){ return toKey(new Date()); }
 function toKey(d){
   return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 }
 function fromKey(k){ const p = k.split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); }
 function shiftKey(k, n){ const d = fromKey(k); d.setDate(d.getDate()+n); return toKey(d); }
-const WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-const MO = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+const WD  = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const WD2 = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+const MO  = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 function prettyDate(k){ const d = fromKey(k); return d.getDate()+". "+MO[d.getMonth()]+" "+d.getFullYear(); }
 function shortDate(k){ const d = fromKey(k); return d.getDate()+"."+(d.getMonth()+1)+"."; }
-
+function mondayOf(k){
+  const d = fromKey(k);
+  const off = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - off);
+  return toKey(d);
+}
+function relDay(k){
+  if(k === todayKey()) return "heute";
+  if(k === shiftKey(todayKey(),-1)) return "gestern";
+  if(k === shiftKey(todayKey(),-2)) return "vorgestern";
+  const diff = Math.round((fromKey(todayKey()) - fromKey(k)) / 86400000);
+  if(diff > 0 && diff < 7) return "vor " + diff + " Tagen";
+  return WD[fromKey(k).getDay()];
+}
 function uid(){ return "p" + Math.random().toString(36).slice(2,8); }
+function num1(v){ return v.toFixed(1).replace(".", ","); }
 
-/* ---------- Persistenz ---------- */
+/* ---------- Persistenz und Rückmeldung ---------- */
 function queueSave(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{ Store.save(data); }, 250);
 }
-function toast(msg){
+let toastTimer = null;
+function toast(msg, undoFn){
   const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("on");
-  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("on"), 1900);
+  document.getElementById("toastText").textContent = msg;
+  const old = t.querySelector(".undo");
+  if(old) old.remove();
+  if(undoFn){
+    const b = document.createElement("button");
+    b.className = "undo"; b.textContent = "Rückgängig";
+    b.addEventListener("click", () => { t.classList.remove("on"); undoFn(); });
+    t.appendChild(b);
+  }
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("on"), undoFn ? 6000 : 2200);
 }
+
+/* ---------- Blatt (Dialog) ---------- */
+function sheet(opts){
+  return new Promise(resolve => {
+    const veil = document.getElementById("veil");
+    const box  = document.getElementById("sheet");
+    box.innerHTML = "";
+
+    const h = document.createElement("h3"); h.textContent = opts.title; box.appendChild(h);
+    if(opts.text){ const p = document.createElement("p"); p.textContent = opts.text; box.appendChild(p); }
+
+    let input = null;
+    if(opts.input !== undefined){
+      input = document.createElement("input");
+      input.type = "text"; input.value = opts.input || ""; input.maxLength = 40;
+      input.placeholder = opts.placeholder || "";
+      box.appendChild(input);
+    }
+
+    const acts = document.createElement("div"); acts.className = "acts";
+    const cancel = document.createElement("button");
+    cancel.className = "btn ghost"; cancel.textContent = opts.cancel || "Abbrechen";
+    const ok = document.createElement("button");
+    ok.className = "btn" + (opts.danger ? " danger" : ""); ok.textContent = opts.ok || "Bestätigen";
+    acts.appendChild(cancel); acts.appendChild(ok); box.appendChild(acts);
+
+    function close(val){
+      veil.classList.remove("on");
+      veil.removeEventListener("click", onVeil);
+      document.removeEventListener("keydown", onKey);
+      setTimeout(()=>resolve(val), 120);
+    }
+    function onKey(e){
+      if(e.key === "Escape") close(null);
+      if(e.key === "Enter" && input) close(input.value.trim() || null);
+    }
+    function onVeil(e){ if(e.target === veil) close(null); }
+    cancel.addEventListener("click", ()=>close(null));
+    ok.addEventListener("click", ()=>close(input ? (input.value.trim() || null) : true));
+    veil.addEventListener("click", onVeil);
+    document.addEventListener("keydown", onKey);
+
+    veil.classList.add("on");
+    if(input) setTimeout(()=>{ input.focus(); input.select(); }, 90);
+  });
+}
+
+/* ---------- Darstellung hell/dunkel ---------- */
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+let themePref = "auto";
+const THEME_ICONS = {
+  auto:  '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 000 16z" fill="currentColor" stroke="none"/>',
+  light: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>',
+  dark:  '<path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>'
+};
+function resolvedTheme(){ return themePref === "auto" ? (mq.matches ? "dark" : "light") : themePref; }
+function applyTheme(){
+  const r = resolvedTheme();
+  document.documentElement.setAttribute("data-theme", r);
+  document.getElementById("themeColor").setAttribute("content", r === "dark" ? "#141714" : "#E8E9E3");
+  document.getElementById("themeIcon").innerHTML = THEME_ICONS[themePref];
+  if(view.tab === "trend") renderTrend(false);
+  if(view.tab === "entry") renderEntry();
+}
+mq.addEventListener("change", () => { if(themePref === "auto") applyTheme(); });
 
 /* ============================================================
    Tab: Eintrag
    ============================================================ */
+let entryRows = [];
+
+function dayFill(k){
+  const day = data.entries[k] || {};
+  const n = data.params.filter(p => day[p.id] != null).length;
+  return data.params.length ? n / data.params.length : 0;
+}
+
+function renderWeekbar(){
+  const host = document.getElementById("weekbar");
+  host.innerHTML = "";
+  const mon = mondayOf(view.date);
+  const today = todayKey();
+  for(let i=0; i<7; i++){
+    const k = shiftKey(mon, i);
+    const b = document.createElement("button");
+    b.className = "wd";
+    if(k === view.date) b.setAttribute("aria-current", "date");
+    if(k === today) b.dataset.today = "1";
+    if(k > today) b.disabled = true;
+    const f = Math.round(dayFill(k) * 100);
+    b.innerHTML =
+      '<span class="l">' + WD2[fromKey(k).getDay()] + '</span>' +
+      '<span class="n">' + fromKey(k).getDate() + '</span>' +
+      '<span class="m"><i style="width:' + f + '%"></i></span>';
+    b.setAttribute("aria-label", prettyDate(k));
+    b.addEventListener("click", () => { view.date = k; renderEntry(); });
+    host.appendChild(b);
+  }
+}
+
+function meanFor(paramId, endKey, win){
+  let sum = 0, n = 0;
+  for(let i=0; i<win; i++){
+    const e = data.entries[shiftKey(endKey, -i)];
+    const v = e ? e[paramId] : undefined;
+    if(typeof v === "number"){ sum += v; n++; }
+  }
+  return n >= 5 ? sum/n : null;
+}
+
 function renderEntry(){
   const k = view.date;
-  document.getElementById("dfWeekday").textContent = WD[fromKey(k).getDay()];
+  entryRows = [];
+  renderWeekbar();
+
   document.getElementById("dfDate").textContent = prettyDate(k);
+  document.getElementById("dfSub").textContent = WD[fromKey(k).getDay()] + ", " + relDay(k);
   document.getElementById("datePick").value = k;
   document.getElementById("dayNext").disabled = k >= todayKey();
+  document.getElementById("todayBtn").hidden = (k === todayKey());
 
   const host = document.getElementById("entryList");
   host.innerHTML = "";
   const day = data.entries[k] || {};
 
   if(!data.params.length){
-    host.innerHTML = '<div class="empty">Noch keine Parameter angelegt.<br>Im Tab Daten anlegen oder eine CSV einlesen.</div>';
-    document.getElementById("savedNote").hidden = true;
+    host.innerHTML = '<div class="empty" style="margin-top:22px"><b>Noch nichts eingerichtet</b>' +
+      'Lege im Tab Daten fest, was du täglich festhalten willst.</div>';
+    document.getElementById("status").hidden = true;
+    document.getElementById("noteBlock").hidden = true;
     return;
   }
+  document.getElementById("noteBlock").hidden = false;
 
   data.params.forEach((p, i) => {
-    const val = day[p.id];
+    const col = penColor(i);
+    let cur = day[p.id] != null ? day[p.id] : null;
+
     const wrap = document.createElement("div");
     wrap.className = "param";
-    const col = penColor(i);
 
     const head = document.createElement("div");
     head.className = "param-head";
     head.innerHTML =
-      '<span class="pen" style="background:'+col+'"></span>' +
-      '<span class="param-name">' + escapeHtml(p.name) + '</span>' +
-      '<span class="param-val' + (val==null?" empty":"") + '">' + (val==null ? "—" : val) + '</span>';
+      '<span class="dot-pen" style="background:' + col + '"></span>' +
+      '<span class="param-name"></span>' +
+      '<span class="param-ctx"></span>' +
+      '<span class="param-val"></span>';
+    head.querySelector(".param-name").textContent = p.name;
+    const valEl = head.querySelector(".param-val");
+    const ctxEl = head.querySelector(".param-ctx");
     wrap.appendChild(head);
 
-    const scale = document.createElement("div");
-    scale.className = "scale";
+    const track = document.createElement("div");
+    track.className = "track";
+    track.setAttribute("role","slider");
+    track.setAttribute("tabindex","0");
+    track.setAttribute("aria-valuemin","1");
+    track.setAttribute("aria-valuemax","10");
+    track.setAttribute("aria-label", p.name + ", Skala 1 bis 10");
+    const segs = [];
     for(let n=1; n<=10; n++){
-      const b = document.createElement("button");
-      b.textContent = n;
-      b.style.setProperty("--tint", col);
-      b.setAttribute("aria-pressed", String(val === n));
-      b.setAttribute("aria-label", p.name + " " + n + " von 10");
-      b.addEventListener("click", () => setValue(k, p.id, val === n ? null : n));
-      scale.appendChild(b);
+      const s = document.createElement("s");
+      track.appendChild(s);
+      segs.push(s);
     }
-    wrap.appendChild(scale);
+
+    const avg = meanFor(p.id, shiftKey(k, -1), 30);
+    if(avg != null){
+      const m = document.createElement("div");
+      m.className = "avg";
+      m.style.left = (((avg - 0.5) / 10) * 100).toFixed(2) + "%";
+      track.appendChild(m);
+      ctxEl.textContent = "Ø " + num1(avg);
+    }
+    wrap.appendChild(track);
+
+    const ruler = document.createElement("div");
+    ruler.className = "ruler";
+    for(let n=1; n<=10; n++){
+      const sp = document.createElement("span");
+      sp.textContent = n;
+      if(n !== 1 && n !== 5 && n !== 10) sp.className = "q";
+      ruler.appendChild(sp);
+    }
+    wrap.appendChild(ruler);
+
+    function paint(v){
+      for(let n=1; n<=10; n++){
+        segs[n-1].style.background = (v != null && n <= v)
+          ? rgba(col, 0.25 + 0.75 * (n / v)) : "transparent";
+      }
+      valEl.textContent = v == null ? "—" : v;
+      valEl.classList.toggle("empty", v == null);
+      if(v == null) track.removeAttribute("aria-valuenow");
+      else track.setAttribute("aria-valuenow", String(v));
+    }
+    paint(cur);
+
+    /* Tippen oder Streichen — beides setzt den Pegel */
+    let down = false, moved = false, preview = cur;
+    const idxAt = e => {
+      const r = track.getBoundingClientRect();
+      return Math.max(1, Math.min(10, Math.floor((e.clientX - r.left) / r.width * 10) + 1));
+    };
+    track.addEventListener("pointerdown", e => {
+      down = true; moved = false;
+      track.classList.add("armed");
+      try{ track.setPointerCapture(e.pointerId); }catch(err){}
+      preview = idxAt(e); paint(preview);
+    });
+    track.addEventListener("pointermove", e => {
+      if(!down) return;
+      const n = idxAt(e);
+      if(n !== preview){ moved = true; preview = n; paint(n); }
+    });
+    track.addEventListener("pointerup", () => {
+      if(!down) return;
+      down = false; track.classList.remove("armed");
+      const next = (!moved && preview === cur) ? null : preview;
+      cur = next; paint(next);
+      setValue(k, p.id, next);
+    });
+    track.addEventListener("pointercancel", () => {
+      if(!down) return;
+      down = false; track.classList.remove("armed");
+      preview = cur; paint(cur);
+    });
+    track.addEventListener("keydown", e => {
+      let next = null;
+      if(e.key === "ArrowRight" || e.key === "ArrowUp")   next = Math.min(10, (cur || 0) + 1);
+      else if(e.key === "ArrowLeft" || e.key === "ArrowDown") next = cur ? Math.max(1, cur - 1) : 1;
+      else if(e.key === "Backspace" || e.key === "Delete") next = null;
+      else return;
+      e.preventDefault();
+      cur = next; preview = next; paint(next); setValue(k, p.id, next);
+    });
+
     host.appendChild(wrap);
+    entryRows.push({ id: p.id, paint: paint });
   });
 
+  const note = document.getElementById("dayNote");
+  note.value = (data.notes && data.notes[k]) || "";
+  refreshStatus();
+}
+
+function refreshStatus(){
+  const day = data.entries[view.date] || {};
   const filled = data.params.filter(p => day[p.id] != null).length;
-  const note = document.getElementById("savedNote");
+  const st = document.getElementById("status");
   if(filled){
-    note.hidden = false;
-    document.getElementById("savedText").textContent =
-      filled + " von " + data.params.length + " erfasst · gespeichert";
+    st.hidden = false;
+    document.getElementById("statusText").textContent =
+      filled + " von " + data.params.length + " erfasst, gespeichert";
   }else{
-    note.hidden = true;
+    st.hidden = true;
   }
 }
 
@@ -499,7 +929,9 @@ function setValue(dateKey, paramId, val){
   if(val == null) delete data.entries[dateKey][paramId];
   else data.entries[dateKey][paramId] = val;
   if(!Object.keys(data.entries[dateKey]).length) delete data.entries[dateKey];
-  queueSave(); renderEntry(); updateHeader();
+  queueSave();
+  renderWeekbar();
+  refreshStatus();
 }
 
 /* ============================================================
@@ -546,48 +978,51 @@ function daysInView(){
   let first;
   if(view.range === 0){ first = keys[0]; }
   else { first = shiftKey(last, -(view.range-1)); if(first < keys[0]) first = keys[0]; }
-  const out = []; let cur = first;
-  let guard = 0;
+  const out = []; let cur = first, guard = 0;
   while(cur <= last && guard++ < 4000){ out.push(cur); cur = shiftKey(cur, 1); }
   return out;
 }
 function activeParams(){ return data.params.filter(p => !view.hidden[p.id]); }
-
+function avgOf(arr){
+  const v = arr.filter(x => x != null);
+  return v.length ? v.reduce((s,x)=>s+x,0)/v.length : null;
+}
 /* ============================================================
-   Tab: Trend
+   Tab: Verlauf
    ============================================================ */
-function renderTrend(){
+let plot = null;
+
+function renderTrend(animate){
   document.querySelectorAll("#rangeCtl .chip").forEach(b =>
     b.setAttribute("aria-pressed", String(Number(b.dataset.range) === view.range)));
   document.querySelectorAll("#maCtl .chip").forEach(b =>
     b.setAttribute("aria-pressed", String(Number(b.dataset.ma) === view.ma)));
+  document.getElementById("maNote").textContent =
+    view.ma > 1 ? "Punkte: Tageswerte, Linie: Mittel" : "";
 
   const leg = document.getElementById("legend");
   leg.innerHTML = "";
   data.params.forEach((p,i) => {
     const b = document.createElement("button");
     b.setAttribute("aria-pressed", String(!view.hidden[p.id]));
-    b.innerHTML = '<span class="pen" style="background:'+penColor(i)+'"></span>' + escapeHtml(p.name);
-    b.addEventListener("click", () => {
-      view.hidden[p.id] = !view.hidden[p.id];
-      renderTrend();
-    });
+    b.innerHTML = '<span class="bar" style="background:' + penColor(i) + '"></span>';
+    b.appendChild(document.createTextNode(p.name));
+    b.addEventListener("click", () => { view.hidden[p.id] = !view.hidden[p.id]; renderTrend(false); });
     leg.appendChild(b);
   });
 
   const days = daysInView();
   document.getElementById("chartFrom").textContent = days.length ? shortDate(days[0]) : "";
-  document.getElementById("chartTo").textContent = days.length ? shortDate(days[days.length-1]) : "";
-  drawChart(days);
-  renderMatrix(days);
-  renderDetail(days);
+  document.getElementById("chartTo").textContent   = days.length ? shortDate(days[days.length-1]) : "";
+  drawChart(days, animate !== false);
+  renderStats(days);
+  renderFindings(days);
 }
 
-function drawChart(days){
+function drawChart(days, animate){
   const cv = document.getElementById("chart");
-  const parent = cv.parentElement;
-  const cssW = parent.clientWidth;
-  const cssH = 250;
+  const cssW = cv.parentElement.clientWidth;
+  const cssH = 260;
   const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
   cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr);
   cv.style.height = cssH + "px";
@@ -595,209 +1030,291 @@ function drawChart(days){
   g.setTransform(dpr,0,0,dpr,0,0);
   g.clearRect(0,0,cssW,cssH);
 
-  const L=30, R=10, T=14, B=20;
+  const L=28, R=12, T=16, B=22;
   const w = cssW-L-R, h = cssH-T-B;
-  const inkGrid = css("--grid"), ink3 = css("--ink-3"), rule = css("--rule");
 
   if(days.length < 2 || !activeParams().length){
-    g.fillStyle = ink3; g.font = "12px " + css("--mono");
+    plot = null;
+    g.fillStyle = css("--ink-3"); g.font = "13px " + css("--sans");
     g.textAlign = "center";
-    g.fillText(days.length<2 ? "Noch zu wenig Daten für eine Kurve"
-                             : "Alle Parameter ausgeblendet", cssW/2, cssH/2);
+    g.fillText(days.length < 2 ? "Ab zwei erfassten Tagen entsteht hier eine Kurve"
+                               : "Alle Parameter ausgeblendet", cssW/2, cssH/2);
     return;
   }
-
-  const X = i => L + (days.length===1 ? w/2 : (i/(days.length-1))*w);
-  const Y = v => T + h - ((v-1)/9)*h;
-
-  // Raster
-  g.lineWidth = 1;
-  for(let v=1; v<=10; v++){
-    const y = Math.round(Y(v))+0.5;
-    g.strokeStyle = (v===1||v===10) ? rule : inkGrid;
-    g.globalAlpha = (v%1===0 && (v===5||v===6)) ? 0.7 : 0.55;
-    if(v===1||v===10) g.globalAlpha = 1;
-    g.beginPath(); g.moveTo(L,y); g.lineTo(L+w,y); g.stroke();
-  }
-  g.globalAlpha = 1;
-  g.fillStyle = ink3; g.font = "10px " + css("--mono"); g.textAlign = "right";
-  [1,5,10].forEach(v => g.fillText(String(v), L-7, Y(v)+3.5));
-
-  // Monatsmarken
-  g.textAlign = "center";
-  let lastMonth = -1;
-  days.forEach((k,i) => {
-    const d = fromKey(k);
-    if(d.getMonth() !== lastMonth && i > 2 && i < days.length-2){
-      lastMonth = d.getMonth();
-      const x = Math.round(X(i))+0.5;
-      g.strokeStyle = inkGrid; g.globalAlpha = .85;
-      g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+h); g.stroke();
-      g.globalAlpha = 1;
-      g.fillStyle = ink3; g.fillText(MO[d.getMonth()], x, T+h+13);
-    }
-  });
-
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const t0 = performance.now();
-  const DUR = reduce ? 0 : 520;
 
   const layers = activeParams().map(p => {
     const idx = data.params.indexOf(p);
     const raw = seriesFor(p.id, days);
-    return { color: penColor(idx), raw: raw, ma: movingAvg(raw, view.ma) };
+    return { name: p.name, color: penColor(idx), raw: raw, ma: movingAvg(raw, view.ma) };
   });
 
-  function frame(now){
-    const prog = DUR === 0 ? 1 : Math.min(1, (now-t0)/DUR);
-    const eased = 1 - Math.pow(1-prog, 3);
-    const clipX = L + w*eased + 1;
+  plot = { g, days, layers, L, R, T, B, w, h, cssW, cssH,
+           X: i => L + (days.length===1 ? w/2 : (i/(days.length-1))*w),
+           Y: v => T + h - ((v-1)/9)*h };
 
-    // Kurvenfläche komplett putzen und Raster neu setzen,
-    // damit nie ein Rasterstrich über einer Kurve landet
-    g.clearRect(L-1, T-6, w+3, h+8);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!animate || reduce){ paintChart(1, null); return; }
+  const t0 = performance.now(), DUR = 520;
+  (function frame(now){
+    const prog = Math.min(1, (now-t0)/DUR);
+    paintChart(1 - Math.pow(1-prog, 3), null);
+    if(prog < 1) requestAnimationFrame(frame);
+  })(t0);
+}
 
-    g.save();
-    g.beginPath(); g.rect(L-1, T-6, w+3, h+8); g.clip();
-    g.lineWidth = 1;
-    for(let v=1; v<=10; v++){
-      const y = Math.round(Y(v))+0.5;
-      g.strokeStyle = (v===1||v===10) ? rule : inkGrid;
-      g.globalAlpha = (v===1||v===10) ? 1 : .55;
-      g.beginPath(); g.moveTo(L,y); g.lineTo(L+w,y); g.stroke();
+function paintChart(prog, hi){
+  if(!plot) return;
+  const { g, days, layers, L, T, w, h, cssW, cssH, X, Y } = plot;
+  g.clearRect(0, 0, cssW, cssH);
+
+  /* Raster */
+  g.lineWidth = 1;
+  for(let v=1; v<=10; v++){
+    const y = Math.round(Y(v))+0.5;
+    g.strokeStyle = (v===1||v===10) ? css("--rule") : css("--grid");
+    g.globalAlpha = (v===1||v===10) ? 1 : .6;
+    g.beginPath(); g.moveTo(L,y); g.lineTo(L+w,y); g.stroke();
+  }
+  g.globalAlpha = 1;
+  g.fillStyle = css("--ink-3"); g.font = "10px " + css("--mono"); g.textAlign = "right";
+  [1,5,10].forEach(v => g.fillText(String(v), L-7, Y(v)+3.5));
+
+  /* Monatsgrenzen */
+  g.textAlign = "center";
+  let lm = -1;
+  days.forEach((k,i) => {
+    const d = fromKey(k);
+    if(d.getMonth() !== lm && i > 2 && i < days.length-2){
+      lm = d.getMonth();
+      const x = Math.round(X(i))+0.5;
+      g.strokeStyle = css("--grid"); g.globalAlpha = .9;
+      g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+h); g.stroke();
+      g.globalAlpha = 1;
+      g.fillStyle = css("--ink-3"); g.fillText(MO[d.getMonth()], x, T+h+14);
     }
-    g.globalAlpha = 1;
-    let lm = -1;
-    days.forEach((k,i)=>{
-      const d = fromKey(k);
-      if(d.getMonth()!==lm && i>2 && i<days.length-2){
-        lm = d.getMonth();
-        const x = Math.round(X(i))+0.5;
-        g.strokeStyle = inkGrid; g.globalAlpha=.85;
-        g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+h); g.stroke();
-        g.globalAlpha=1;
-      }
-    });
-    g.restore();
+  });
 
-    g.save();
-    g.beginPath(); g.rect(L-2, 0, clipX-(L-2), cssH); g.clip();
+  /* Kurven, links nach rechts aufgedeckt */
+  g.save();
+  g.beginPath(); g.rect(L-2, 0, (L + w*prog + 1)-(L-2), cssH); g.clip();
+  layers.forEach(ly => {
+    let pen = false;
+    g.lineJoin = "round"; g.lineCap = "round";
 
-    layers.forEach(ly => {
-      // Rohwerte, dünn
-      g.strokeStyle = ly.color; g.lineWidth = 1;
-      g.globalAlpha = view.ma > 1 ? .28 : .9;
+    if(view.ma > 1){
+      /* Geglättet: Tageswerte als Punktwolke, sonst wird es ein Knäuel */
+      g.fillStyle = ly.color; g.globalAlpha = .30;
+      const rad = days.length > 200 ? 1.1 : 1.7;
+      ly.raw.forEach((v,i)=>{ if(v!=null){ g.beginPath(); g.arc(X(i),Y(v),rad,0,7); g.fill(); } });
+    }else{
+      g.strokeStyle = ly.color; g.lineWidth = 1.4; g.globalAlpha = .95;
       g.beginPath();
-      let pen = false;
       ly.raw.forEach((v,i)=>{
         if(v==null){ pen = false; return; }
         const x = X(i), y = Y(v);
         if(!pen){ g.moveTo(x,y); pen = true; } else g.lineTo(x,y);
       });
       g.stroke();
-
       if(days.length <= 70){
         g.fillStyle = ly.color;
-        ly.raw.forEach((v,i)=>{ if(v!=null){ g.beginPath(); g.arc(X(i),Y(v),1.7,0,7); g.fill(); } });
+        ly.raw.forEach((v,i)=>{ if(v!=null){ g.beginPath(); g.arc(X(i),Y(v),2,0,7); g.fill(); } });
       }
-
-      // Gleitendes Mittel, kräftig
-      if(view.ma > 1){
-        g.globalAlpha = 1; g.lineWidth = 2.2;
-        g.lineJoin = "round"; g.lineCap = "round";
-        g.strokeStyle = ly.color;
-        g.beginPath();
-        pen = false;
-        ly.ma.forEach((v,i)=>{
-          if(v==null){ pen=false; return; }
-          const x = X(i), y = Y(v);
-          if(!pen){ g.moveTo(x,y); pen=true; } else g.lineTo(x,y);
-        });
-        g.stroke();
-      }
-      g.globalAlpha = 1;
-    });
-    g.restore();
-
-    if(prog < 1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-}
-
-/* ---------- Korrelationsmatrix ---------- */
-function fmtR(r){
-  if(r == null) return "·";
-  const a = Math.abs(r);
-  const s = a >= 0.995 ? "1,0" : a.toFixed(2).slice(1).replace(".", ",");
-  return (r < 0 ? "−" : "") + s;
-}
-function corrColor(r){
-  if(r == null) return "transparent";
-  const a = Math.min(1, Math.abs(r));
-  const strength = 0.10 + a*0.72;
-  return r >= 0 ? "rgba(31,78,161," + strength.toFixed(3) + ")"
-                : "rgba(193,39,45," + strength.toFixed(3) + ")";
-}
-function renderMatrix(days){
-  const host = document.getElementById("matrixHost");
-  const ps = data.params;
-  if(ps.length < 2){
-    host.innerHTML = '<div class="empty">Ab zwei Parametern zeigt sich hier die Korrelationsmatrix.</div>';
-    return;
-  }
-  const series = ps.map(p => seriesFor(p.id, days));
-  let anyValue = false;
-
-  let html = '<div class="matrix-wrap"><table class="matrix"><tr><th></th>';
-  ps.forEach((p,j) => { if(j < ps.length-1) html += '<th class="col">'+escapeHtml(p.name)+'</th>'; });
-  html += '</tr>';
-
-  for(let i=1; i<ps.length; i++){
-    html += '<tr><th>'+escapeHtml(ps[i].name)+'</th>';
-    for(let j=0; j<ps.length-1; j++){
-      if(j >= i){ html += '<td class="blank"></td>'; continue; }
-      const res = pearson(series[i], series[j], 0);
-      if(res.r != null) anyValue = true;
-      const label = fmtR(res.r);
-      html += '<td style="background:'+corrColor(res.r)+'">'
-            + '<button data-i="'+i+'" data-j="'+j+'" aria-label="'
-            + escapeHtml(ps[i].name)+' gegen '+escapeHtml(ps[j].name)+'">'+label+'</button></td>';
     }
-    html += '</tr>';
-  }
-  html += '</table></div>';
+    if(view.ma > 1){
+      g.globalAlpha = 1; g.lineWidth = 2.4;
+      g.strokeStyle = ly.color;
+      g.beginPath(); pen = false;
+      ly.ma.forEach((v,i)=>{
+        if(v==null){ pen=false; return; }
+        const x = X(i), y = Y(v);
+        if(!pen){ g.moveTo(x,y); pen=true; } else g.lineTo(x,y);
+      });
+      g.stroke();
+    }
+    g.globalAlpha = 1;
+  });
+  g.restore();
 
-  if(!anyValue){
-    host.innerHTML = '<div class="empty">Noch zu wenige gemeinsame Tage.<br>Ab fünf Tagen je Paar wird gerechnet.</div>';
+  /* Ablesemarke */
+  if(hi != null && hi >= 0 && hi < days.length){
+    const x = Math.round(X(hi))+0.5;
+    g.strokeStyle = css("--ink"); g.globalAlpha = .45; g.lineWidth = 1;
+    g.setLineDash([3,3]);
+    g.beginPath(); g.moveTo(x,T); g.lineTo(x,T+h); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+    layers.forEach(ly => {
+      const v = ly.raw[hi];
+      if(v == null) return;
+      g.beginPath(); g.arc(X(hi), Y(v), 4.2, 0, 7);
+      g.fillStyle = ly.color; g.fill();
+      g.lineWidth = 1.6; g.strokeStyle = css("--panel"); g.stroke();
+    });
+  }
+}
+
+/* Ablesen durch Tippen und Ziehen im Diagramm */
+(function wireScrub(){
+  const cv = document.getElementById("chart");
+  const ro = document.getElementById("readout");
+  let on = false;
+
+  function at(e){
+    if(!plot) return null;
+    const r = cv.getBoundingClientRect();
+    const rel = (e.clientX - r.left - plot.L) / plot.w;
+    return Math.max(0, Math.min(plot.days.length-1, Math.round(rel * (plot.days.length-1))));
+  }
+  function show(e){
+    const i = at(e);
+    if(i == null) return;
+    paintChart(1, i);
+    const k = plot.days[i];
+    let html = '<div class="rd">' + shortDate(k) + " " + WD2[fromKey(k).getDay()] + '</div>';
+    let any = false;
+    plot.layers.forEach(ly => {
+      const v = ly.raw[i];
+      if(v == null) return;
+      any = true;
+      html += '<div><span style="background:' + ly.color + '"></span>' + ly.name + " " + v + '</div>';
+    });
+    if(!any) html += '<div style="color:var(--ink-3)">nichts erfasst</div>';
+    ro.innerHTML = html;
+    ro.classList.add("on");
+    const x = plot.X(i);
+    ro.style.left = (x < plot.cssW * 0.55 ? plot.cssW - ro.offsetWidth - 8 : 8) + "px";
+    on = true;
+  }
+  function hide(){
+    if(!on) return;
+    on = false; ro.classList.remove("on"); paintChart(1, null);
+  }
+  cv.addEventListener("pointerdown", e => { try{ cv.setPointerCapture(e.pointerId); }catch(err){} show(e); });
+  cv.addEventListener("pointermove", e => { if(on) show(e); });
+  cv.addEventListener("pointerup", hide);
+  cv.addEventListener("pointercancel", hide);
+  cv.addEventListener("pointerleave", hide);
+})();
+
+/* ---------- Mittelwerte ---------- */
+function renderStats(days){
+  const host = document.getElementById("stats");
+  const ps = activeParams();
+  if(!days.length || !ps.length){
+    host.innerHTML = '<div class="empty" style="grid-column:1/-1">Noch keine Werte im gewählten Zeitraum.</div>';
     return;
   }
-  html += '<p class="hint">Blau: steigt zusammen. Rot: gegenläufig. Zelle antippen für Streubild und Zeitversatz.</p>';
-  host.innerHTML = html;
+  const span = days.length;
+  const prevDays = [];
+  for(let i=span; i>0; i--) prevDays.push(shiftKey(days[0], -i));
 
-  host.querySelectorAll("td button").forEach(b => {
-    b.addEventListener("click", () => {
-      const i = +b.dataset.i, j = +b.dataset.j;
-      view.pair = (view.pair && view.pair[0]===i && view.pair[1]===j) ? null : [i,j];
-      renderDetail(days);
-      if(view.pair) document.getElementById("detailHost").scrollIntoView({behavior:"smooth", block:"nearest"});
-    });
+  host.innerHTML = "";
+  ps.forEach(p => {
+    const idx = data.params.indexOf(p);
+    const now  = avgOf(seriesFor(p.id, days));
+    const then = avgOf(seriesFor(p.id, prevDays));
+    const el = document.createElement("div");
+    el.className = "stat";
+
+    let delta = '<div class="d">kein Vergleichszeitraum</div>';
+    if(now != null && then != null){
+      const d = now - then;
+      if(Math.abs(d) < 0.05){
+        delta = '<div class="d">unverändert</div>';
+      }else{
+        const cls = Math.abs(d) < 0.15 ? "" : (d > 0 ? " up" : " down");
+        delta = '<div class="d' + cls + '">' + (d > 0 ? "+" : "−") +
+                num1(Math.abs(d)) + " gegenüber davor</div>";
+      }
+    }
+    el.innerHTML =
+      '<div class="n"><i style="background:' + penColor(idx) + '"></i><span></span></div>' +
+      '<div class="v">' + (now == null ? "—" : num1(now)) + '</div>' + delta;
+    el.querySelector(".n span").textContent = p.name;
+    host.appendChild(el);
   });
 }
 
-function renderDetail(days){
-  const host = document.getElementById("detailHost");
-  if(!view.pair){ host.innerHTML = ""; return; }
-  const [i,j] = view.pair;
-  const pa = data.params[i], pb = data.params[j];
-  if(!pa || !pb){ view.pair = null; host.innerHTML = ""; return; }
+/* ---------- Zusammenhänge im Klartext ---------- */
+function strengthWord(a){
+  if(a >= 0.6)  return "starker";
+  if(a >= 0.4)  return "deutlicher";
+  if(a >= 0.25) return "schwacher";
+  return "kaum ein";
+}
+function sentence(nameA, nameB, r){
+  const a = Math.abs(r);
+  if(a < 0.25) return "Zwischen " + nameA + " und " + nameB + " zeigt sich bisher kein klares Muster.";
+  return r > 0
+    ? "Wenn " + nameA + " hoch ist, ist " + nameB + " meist auch hoch."
+    : "Wenn " + nameA + " hoch ist, ist " + nameB + " meist niedrig.";
+}
 
+function renderFindings(days){
+  const host = document.getElementById("findings");
+  const ps = data.params;
+  if(ps.length < 2){
+    host.innerHTML = '<div class="empty"><b>Ab zwei Parametern</b>Dann sucht Pegel hier nach Mustern zwischen ihnen.</div>';
+    return;
+  }
+  const series = ps.map(p => seriesFor(p.id, days));
+  const pairs = [];
+  for(let i=0; i<ps.length; i++){
+    for(let j=i+1; j<ps.length; j++){
+      const res = pearson(series[i], series[j], 0);
+      if(res.r != null) pairs.push({ i, j, r: res.r, n: res.n });
+    }
+  }
+  if(!pairs.length){
+    host.innerHTML = '<div class="empty"><b>Noch zu wenig gemeinsame Tage</b>' +
+      'Ab fünf Tagen, an denen zwei Parameter beide einen Wert haben, wird gerechnet.</div>';
+    return;
+  }
+  pairs.sort((a,b) => Math.abs(b.r) - Math.abs(a.r));
+  host.innerHTML = "";
+
+  pairs.slice(0, 6).forEach(pr => {
+    const pa = ps[pr.i], pb = ps[pr.j];
+    const a = Math.abs(pr.r);
+    const col = pr.r >= 0 ? css("--pen-2") : css("--pen-1");
+    const open = view.pair && view.pair[0] === pr.i && view.pair[1] === pr.j;
+
+    const b = document.createElement("button");
+    b.className = "find";
+    b.setAttribute("aria-expanded", String(!!open));
+    b.innerHTML =
+      '<div class="pair">' +
+        '<i style="background:' + penColor(pr.i) + '"></i><b class="a"></b>' +
+        '<em>und</em>' +
+        '<i style="background:' + penColor(pr.j) + '"></i><b class="b"></b>' +
+      '</div>' +
+      '<div class="say"></div>' +
+      '<div class="meter"><div class="bar"><i style="width:' + Math.round(a*100) + '%;background:' + col + '"></i></div>' +
+      '<span class="lab">' + strengthWord(a) + " Zusammenhang · " + pr.n + ' Tage</span></div>';
+    b.querySelector(".a").textContent = pa.name;
+    b.querySelector(".b").textContent = pb.name;
+    b.querySelector(".say").textContent = sentence(pa.name, pb.name, pr.r);
+    b.addEventListener("click", () => {
+      view.pair = open ? null : [pr.i, pr.j];
+      renderFindings(days);
+    });
+    host.appendChild(b);
+
+    if(open) host.appendChild(buildDeep(days, pr));
+  });
+
+  const p = document.createElement("p");
+  p.className = "hint";
+  p.textContent = "Ein Zusammenhang ist noch keine Ursache — beides kann von etwas Drittem kommen. Antippen zeigt Streubild und Zeitversatz.";
+  host.appendChild(p);
+}
+
+function buildDeep(days, pr){
+  const pa = data.params[pr.i], pb = data.params[pr.j];
   const A = seriesFor(pa.id, days), B = seriesFor(pb.id, days);
   const base = pearson(A, B, 0);
 
   const lags = [];
-  for(let L=-5; L<=5; L++){ const r = pearson(A, B, L); lags.push({L:L, r:r.r, n:r.n}); }
-  // Bester Versatz: größtes |r|, bei Gleichstand der kleinere Versatz,
-  // und nur Versätze mit ausreichend gemeinsamen Tagen
+  for(let L=-5; L<=5; L++){ const r = pearson(A, B, L); lags.push({ L, r: r.r, n: r.n }); }
   const maxN = Math.max.apply(null, lags.map(x => x.n || 0));
   const best = lags.reduce((m,x) => {
     if(x.r == null || x.n < Math.max(5, maxN*0.6)) return m;
@@ -818,44 +1335,37 @@ function renderDetail(days){
   });
   bars += '</div><div class="laglabels">' + lags.map(x=>'<span>'+(x.L>0?"+":"")+x.L+'</span>').join("") + '</div>';
 
-  const rTxt = base.r==null ? "zu wenige gemeinsame Tage"
-    : "r = " + base.r.toFixed(2) + "  ·  n = " + base.n + " Tage";
+  const box = document.createElement("div");
+  box.className = "deep";
+  box.innerHTML =
+    '<canvas id="scatter" height="360"></canvas>' +
+    '<div class="sec" style="margin:16px 0 8px">Zeitversatz in Tagen</div>' + bars;
 
-  let interp = "";
-  if(best && best.r != null && Math.abs(best.r) > Math.abs(base.r||0) + 0.08){
-    const dir = best.L > 0
-      ? escapeHtml(pa.name) + " geht " + Math.abs(best.L) + " Tag(e) voraus"
-      : escapeHtml(pb.name) + " geht " + Math.abs(best.L) + " Tag(e) voraus";
-    interp = '<p class="hint">Stärkster Zusammenhang bei Versatz ' + (best.L>0?"+":"") + best.L +
-             ' (r = ' + best.r.toFixed(2) + '): ' + dir + '.</p>';
+  if(best && best.r != null && Math.abs(best.r) > Math.abs(base.r||0) + 0.08 && best.L !== 0){
+    const lead = best.L > 0 ? pa.name : pb.name;
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = "Am stärksten, wenn " + lead + " " + Math.abs(best.L) +
+      (Math.abs(best.L) === 1 ? " Tag" : " Tage") + " vorausgeht.";
+    box.appendChild(p);
   }
-
-  host.innerHTML =
-    '<div class="detail">' +
-      '<h3>' + escapeHtml(pa.name) + ' &times; ' + escapeHtml(pb.name) + '</h3>' +
-      '<div class="r-line">' + rTxt + '</div>' +
-      '<canvas id="scatter" height="360"></canvas>' +
-      '<div class="eyebrow" style="margin:18px 0 8px">Zeitversatz in Tagen</div>' +
-      bars + interp +
-    '</div>';
-
-  drawScatter(base, penColor(i), penColor(j), pa.name, pb.name);
+  setTimeout(() => drawScatter(base, penColor(pr.i), pa.name, pb.name), 0);
+  return box;
 }
 
-function drawScatter(res, colA, colB, nameA, nameB){
+function drawScatter(res, colA, nameA, nameB){
   const cv = document.getElementById("scatter");
   if(!cv) return;
-  cv.style.display = "block";
-  cv.style.width = "100%";
+  cv.style.display = "block"; cv.style.width = "100%";
   const cssW = Math.max(200, Math.round(cv.getBoundingClientRect().width));
-  const cssH = 190;
+  const cssH = 200;
   const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
   cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr);
   cv.style.height = cssH + "px";
   const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
   g.clearRect(0,0,cssW,cssH);
 
-  const L=26,R=8,T=8,B=24;
+  const L=26,R=8,T=8,B=26;
   const w=cssW-L-R, h=cssH-T-B;
   const X = v => L + ((v-1)/9)*w;
   const Y = v => T + h - ((v-1)/9)*h;
@@ -870,33 +1380,29 @@ function drawScatter(res, colA, colB, nameA, nameB){
   g.fillStyle = css("--ink-3"); g.font = "9.5px " + css("--mono");
   g.textAlign="right"; g.fillText("10", L-5, Y(10)+3); g.fillText("1", L-5, Y(1)+3);
   g.textAlign="center";
-  g.fillText(nameB.slice(0,18) + " →", L+w/2, cssH-6);
+  g.fillText(nameB.slice(0,20), L+w/2, cssH-7);
   g.save(); g.translate(9, T+h/2); g.rotate(-Math.PI/2);
-  g.fillText("↑ " + nameA.slice(0,16), 0, 0); g.restore();
+  g.fillText(nameA.slice(0,16), 0, 0); g.restore();
 
   if(!res.xs || !res.xs.length){
     g.fillStyle = css("--ink-3"); g.fillText("keine gemeinsamen Tage", L+w/2, T+h/2);
     return;
   }
-
-  // Punkte mit Häufigkeitsstapelung
   const counts = {};
   for(let i=0;i<res.xs.length;i++){
     const k = res.ys[i] + ":" + res.xs[i];
     counts[k] = (counts[k]||0)+1;
   }
   Object.keys(counts).forEach(k => {
-    const [bx, ay] = k.split(":").map(Number);
+    const parts = k.split(":").map(Number);
     const n = counts[k];
     g.beginPath();
-    g.arc(X(bx), Y(ay), 2.6 + Math.min(5, Math.log2(n)*2.1), 0, 7);
+    g.arc(X(parts[0]), Y(parts[1]), 2.8 + Math.min(5, Math.log2(n)*2.1), 0, 7);
     g.fillStyle = colA; g.globalAlpha = .18 + Math.min(.5, n*0.12);
     g.fill();
-    g.globalAlpha = 1; g.lineWidth = 1; g.strokeStyle = colA;
-    g.stroke();
+    g.globalAlpha = 1; g.lineWidth = 1; g.strokeStyle = colA; g.stroke();
   });
 
-  // Regressionsgerade
   if(res.r != null){
     const n = res.xs.length;
     const mx = res.ys.reduce((s,v)=>s+v,0)/n;
@@ -905,69 +1411,177 @@ function drawScatter(res, colA, colB, nameA, nameB){
     for(let i=0;i<n;i++){ const dx=res.ys[i]-mx, dy=res.xs[i]-my; sxy+=dx*dy; sxx+=dx*dx; }
     if(sxx>0){
       const b = sxy/sxx, a = my - b*mx;
-      g.strokeStyle = css("--ink"); g.globalAlpha=.55; g.lineWidth=1.6;
+      g.strokeStyle = css("--ink"); g.globalAlpha=.5; g.lineWidth=1.6;
       g.setLineDash([5,4]);
       g.beginPath(); g.moveTo(X(1), Y(a+b*1)); g.lineTo(X(10), Y(a+b*10)); g.stroke();
       g.setLineDash([]); g.globalAlpha=1;
     }
   }
 }
-
 /* ============================================================
    Tab: Daten
    ============================================================ */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+const ICON_UP   = '<svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const ICON_DOWN = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+const ICON_DEL  = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+const ICON_NOTE = '<svg viewBox="0 0 24 24"><path d="M5 4h14v16l-7-4-7 4z"/></svg>';
+
 function renderData(){
   const host = document.getElementById("paramEditor");
   host.innerHTML = "";
   if(!data.params.length){
-    host.innerHTML = '<div class="empty">Noch keine Parameter.</div>';
+    host.innerHTML = '<div class="empty"><b>Noch nichts festgelegt</b>' +
+      'Ein Parameter ist eine Sache, die du täglich von 1 bis 10 einschätzt — Schlaf, Stimmung, Stress.</div>';
   }
+
   data.params.forEach((p,i) => {
     const row = document.createElement("div");
     row.className = "row";
-    row.innerHTML = '<span class="pen" style="background:'+penColor(i)+'"></span>';
+
+    const pen = document.createElement("span");
+    pen.className = "dot-pen";
+    pen.style.background = penColor(i);
+    row.appendChild(pen);
+
     const inp = document.createElement("input");
     inp.type = "text"; inp.value = p.name; inp.maxLength = 40;
-    inp.setAttribute("aria-label","Name von Parameter "+(i+1));
+    inp.setAttribute("aria-label", "Name von " + p.name);
     inp.addEventListener("change", () => {
-      p.name = inp.value.trim() || p.name; inp.value = p.name; queueSave(); renderAll();
+      const v = inp.value.trim();
+      if(!v){ inp.value = p.name; return; }
+      p.name = v; queueSave(); renderAll();
     });
     row.appendChild(inp);
-    const kill = document.createElement("button");
-    kill.className = "kill"; kill.textContent = "entfernen";
-    kill.addEventListener("click", () => {
-      if(!confirm('"'+p.name+'" samt aller Werte entfernen?')) return;
-      data.params = data.params.filter(x => x.id !== p.id);
-      Object.keys(data.entries).forEach(k => {
-        delete data.entries[k][p.id];
-        if(!Object.keys(data.entries[k]).length) delete data.entries[k];
-      });
-      view.pair = null; queueSave(); renderAll(); toast("Parameter entfernt");
-    });
-    row.appendChild(kill);
+
+    const up = document.createElement("button");
+    up.className = "mini"; up.innerHTML = ICON_UP;
+    up.setAttribute("aria-label", p.name + " nach oben"); up.disabled = (i === 0);
+    up.addEventListener("click", () => moveParam(i, -1));
+    row.appendChild(up);
+
+    const dn = document.createElement("button");
+    dn.className = "mini"; dn.innerHTML = ICON_DOWN;
+    dn.setAttribute("aria-label", p.name + " nach unten"); dn.disabled = (i === data.params.length-1);
+    dn.addEventListener("click", () => moveParam(i, 1));
+    row.appendChild(dn);
+
+    const del = document.createElement("button");
+    del.className = "mini del"; del.innerHTML = ICON_DEL;
+    del.setAttribute("aria-label", p.name + " entfernen");
+    del.addEventListener("click", () => removeParam(p));
+    row.appendChild(del);
+
     host.appendChild(row);
   });
 
-  const dl = document.getElementById("dayList");
   const keys = Object.keys(data.entries).sort().reverse();
-  if(!keys.length){ dl.innerHTML = '<div class="empty">Noch keine Tage erfasst.</div>'; return; }
+  document.getElementById("dayCount").textContent = keys.length ? keys.length + " gesamt" : "";
+
+  const dl = document.getElementById("dayList");
+  if(!keys.length){
+    dl.innerHTML = '<div class="empty"><b>Noch keine Tage erfasst</b>' +
+      'Trag im Tab Eintrag den ersten Wert ein — nach ein paar Tagen entsteht daraus eine Kurve.</div>';
+    return;
+  }
   dl.innerHTML = "";
   keys.slice(0,120).forEach(k => {
     const b = document.createElement("button");
     b.className = "day-row";
     const vals = data.params.filter(p => data.entries[k][p.id] != null)
-      .map(p => p.name.slice(0,4) + " <b>" + data.entries[k][p.id] + "</b>").join(" ");
-    b.innerHTML = '<span class="d">'+shortDate(k)+fromKey(k).getFullYear().toString().slice(2)+'</span>'
-                + '<span class="v">'+vals+'</span>';
+      .map(p => escapeHtml(p.name.slice(0,4)) + " <b>" + data.entries[k][p.id] + "</b>").join(" ");
+    const hasNote = data.notes && data.notes[k];
+    b.innerHTML =
+      '<span class="d">' + shortDate(k) + fromKey(k).getFullYear().toString().slice(2) + '</span>' +
+      '<span class="v">' + vals + '</span>' +
+      (hasNote ? '<span class="pin" aria-label="mit Notiz">' + ICON_NOTE + '</span>' : "");
     b.addEventListener("click", () => { view.date = k; switchTab("entry"); });
     dl.appendChild(b);
   });
   if(keys.length > 120){
     const p = document.createElement("p");
     p.className = "hint";
-    p.textContent = "Es werden die letzten 120 Tage gelistet, gespeichert sind " + keys.length + ".";
+    p.textContent = "Gelistet sind die letzten 120 Tage, gespeichert sind " + keys.length + ".";
     dl.appendChild(p);
   }
+}
+
+function moveParam(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= data.params.length) return;
+  const t = data.params[i]; data.params[i] = data.params[j]; data.params[j] = t;
+  view.pair = null;
+  queueSave(); renderAll();
+}
+
+async function removeParam(p){
+  const ok = await sheet({
+    title: p.name + " entfernen?",
+    text: "Alle bisher erfassten Werte dieses Parameters werden gelöscht.",
+    ok: "Entfernen", danger: true
+  });
+  if(!ok) return;
+
+  const idx = data.params.indexOf(p);
+  const backup = {};
+  Object.keys(data.entries).forEach(k => {
+    if(data.entries[k][p.id] != null) backup[k] = data.entries[k][p.id];
+  });
+
+  data.params = data.params.filter(x => x.id !== p.id);
+  Object.keys(data.entries).forEach(k => {
+    delete data.entries[k][p.id];
+    if(!Object.keys(data.entries[k]).length) delete data.entries[k];
+  });
+  view.pair = null; queueSave(); renderAll();
+
+  toast(p.name + " entfernt", () => {
+    data.params.splice(idx, 0, p);
+    Object.keys(backup).forEach(k => {
+      if(!data.entries[k]) data.entries[k] = {};
+      data.entries[k][p.id] = backup[k];
+    });
+    queueSave(); renderAll();
+  });
+}
+
+/* ---------- Sicherung als Datei ---------- */
+function download(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+function exportJson(){
+  const payload = { app:"pegel", version:1, exported:new Date().toISOString(),
+                    params:data.params, entries:data.entries, notes:data.notes || {} };
+  download(new Blob([JSON.stringify(payload, null, 1)], {type:"application/json"}),
+           "pegel-sicherung-" + todayKey() + ".json");
+  toast("Sicherung geladen");
+}
+async function importJson(text){
+  let obj;
+  try{ obj = JSON.parse(text); }catch(e){ toast("Die Datei ist keine gültige Sicherung"); return; }
+  if(!obj || !Array.isArray(obj.params) || typeof obj.entries !== "object" || !obj.entries){
+    toast("Die Datei ist keine gültige Sicherung"); return;
+  }
+  const days = Object.keys(obj.entries).length;
+  const ok = await sheet({
+    title: "Sicherung einspielen?",
+    text: "Enthält " + obj.params.length + " Parameter und " + days +
+          " Tage. Alles, was jetzt auf diesem Gerät liegt, wird dadurch ersetzt.",
+    ok: "Einspielen", danger: true
+  });
+  if(!ok) return;
+  data = { params: obj.params, entries: obj.entries, notes: obj.notes || {} };
+  view.pair = null; view.hidden = {};
+  await Store.save(data);
+  renderAll();
+  toast(days + " Tage eingespielt");
 }
 
 /* ---------- CSV ---------- */
@@ -992,30 +1606,30 @@ function splitLine(line, d){
   out.push(cur);
   return out.map(s => s.trim().replace(/^"|"$/g,""));
 }
+const NOTE_COL = "__note";
 function importCSV(text){
   const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length);
-  if(lines.length < 2){ toast("Datei enthält keine Daten"); return; }
+  if(lines.length < 2){ toast("Die Datei enthält keine Daten"); return; }
   const cands = [",",";","\t"];
   const d = cands.reduce((best,c) =>
     (lines[0].split(c).length > lines[0].split(best).length ? c : best), ",");
 
   const header = splitLine(lines[0], d);
   let start = 1;
-  if(parseDate(header[0])){ start = 0; }   // keine Kopfzeile
+  if(parseDate(header[0])) start = 0;
 
-  const colNames = start === 1
-    ? header.slice(1)
-    : header.slice(1).map((_,i) => "Spalte " + (i+2));
+  const colNames = start === 1 ? header.slice(1)
+                               : header.slice(1).map((_,i) => "Spalte " + (i+2));
 
-  // Spalten auf Parameter abbilden
   const map = colNames.map(name => {
     const clean = name.trim();
+    if(/^(notiz|notizen|note|notes|bemerkung)$/i.test(clean)) return NOTE_COL;
     let p = data.params.find(x => x.name.toLowerCase() === clean.toLowerCase());
     if(!p && clean){ p = { id: uid(), name: clean }; data.params.push(p); }
     return p ? p.id : null;
   });
 
-  let days = 0, values = 0, skipped = 0;
+  let days = 0, values = 0, skipped = 0, notes = 0;
   for(let i=start; i<lines.length; i++){
     const cells = splitLine(lines[i], d);
     const key = parseDate(cells[0] || "");
@@ -1024,9 +1638,10 @@ function importCSV(text){
     for(let c=1; c<cells.length; c++){
       const pid = map[c-1];
       if(!pid) continue;
-      const raw = (cells[c]||"").replace(",",".").trim();
+      const raw = (cells[c]||"").trim();
       if(raw === "") continue;
-      let v = parseFloat(raw);
+      if(pid === NOTE_COL){ data.notes[key] = raw; notes++; touched = true; continue; }
+      let v = parseFloat(raw.replace(",","."));
       if(!isFinite(v)) continue;
       v = Math.round(v);
       if(v < 1 || v > 10) continue;
@@ -1039,38 +1654,32 @@ function importCSV(text){
   Store.save(data);
   renderAll();
   toast(values + " Werte an " + days + " Tagen eingelesen");
-  if(skipped) setTimeout(()=>toast(skipped + " Zeilen ohne lesbares Datum übersprungen"), 2100);
+  if(skipped) setTimeout(()=>toast(skipped + " Zeilen ohne lesbares Datum übersprungen"), 2400);
+}
+function csvCell(s){
+  s = String(s == null ? "" : s);
+  return /[";\r\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
 }
 function exportCSV(){
   const keys = Object.keys(data.entries).sort();
-  const head = ["Datum"].concat(data.params.map(p => p.name));
-  const rows = [head.join(";")];
-  keys.forEach(k => {
-    rows.push([k].concat(data.params.map(p => {
-      const v = data.entries[k][p.id]; return v == null ? "" : v;
-    })).join(";"));
+  const noteKeys = Object.keys(data.notes || {});
+  const all = Array.from(new Set(keys.concat(noteKeys))).sort();
+  const rows = [["Datum"].concat(data.params.map(p => p.name)).concat(["Notiz"]).map(csvCell).join(";")];
+  all.forEach(k => {
+    const e = data.entries[k] || {};
+    rows.push([k]
+      .concat(data.params.map(p => e[p.id] == null ? "" : e[p.id]))
+      .concat([(data.notes && data.notes[k]) || ""])
+      .map(csvCell).join(";"));
   });
-  const blob = new Blob(["\ufeff" + rows.join("\r\n")], {type:"text/csv;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "pegel_" + todayKey() + ".csv";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 4000);
-  toast("CSV gesichert");
+  download(new Blob(["\ufeff" + rows.join("\r\n")], {type:"text/csv;charset=utf-8"}),
+           "pegel-" + todayKey() + ".csv");
+  toast("Tabelle geladen");
 }
 
 /* ============================================================
    Gerüst
    ============================================================ */
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function updateHeader(){
-  const n = Object.keys(data.entries).length;
-  document.getElementById("headerMeta").textContent =
-    n ? n + " Tage · " + data.params.length + " Parameter" : data.params.length + " Parameter";
-}
 function switchTab(name){
   view.tab = name;
   ["entry","trend","data"].forEach(t => {
@@ -1079,37 +1688,14 @@ function switchTab(name){
   document.querySelectorAll("nav button").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.tab === name)));
   window.scrollTo(0,0);
-  if(name === "trend") renderTrend();
-  if(name === "data") renderData();
+  if(name === "trend") renderTrend(true);
+  if(name === "data")  renderData();
   if(name === "entry") renderEntry();
 }
 function renderAll(){
-  updateHeader();
   if(view.tab === "entry") renderEntry();
-  if(view.tab === "trend") renderTrend();
-  if(view.tab === "data") renderData();
-}
-
-/* ---------- Installierbarkeit ---------- */
-function installManifest(){
-  try{
-    const icon =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">' +
-      '<rect width="192" height="192" fill="#E8E9E3"/>' +
-      '<path d="M24 150V42M24 150h144" stroke="#161A17" stroke-width="6" fill="none"/>' +
-      '<path d="M40 118l30-34 22 20 40-56" stroke="#C1272D" stroke-width="9" fill="none" stroke-linejoin="round"/>' +
-      '</svg>';
-    const mf = {
-      name:"Pegel", short_name:"Pegel", start_url:".", scope:".",
-      display:"standalone", background_color:"#E8E9E3", theme_color:"#E8E9E3",
-      icons:[{ src:"data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(icon))),
-               sizes:"192x192", type:"image/svg+xml", purpose:"any" }]
-    };
-    const link = document.createElement("link");
-    link.rel = "manifest";
-    link.href = URL.createObjectURL(new Blob([JSON.stringify(mf)], {type:"application/manifest+json"}));
-    document.head.appendChild(link);
-  }catch(e){ /* nicht kritisch */ }
+  if(view.tab === "trend") renderTrend(false);
+  if(view.tab === "data")  renderData();
 }
 
 /* ---------- Verdrahtung ---------- */
@@ -1123,24 +1709,44 @@ document.getElementById("dayNext").addEventListener("click", () => {
   if(view.date >= todayKey()) return;
   view.date = shiftKey(view.date, 1); renderEntry();
 });
+document.getElementById("todayBtn").addEventListener("click", () => {
+  view.date = todayKey(); renderEntry();
+});
 document.getElementById("datePick").addEventListener("change", e => {
   if(e.target.value){ view.date = e.target.value; renderEntry(); }
 });
+document.getElementById("dayNote").addEventListener("input", e => {
+  const k = view.date, v = e.target.value;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => {
+    if(v.trim()) data.notes[k] = v;
+    else delete data.notes[k];
+    queueSave();
+  }, 400);
+});
+
 document.getElementById("rangeCtl").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if(!b) return;
-  view.range = Number(b.dataset.range); renderTrend();
+  view.range = Number(b.dataset.range); renderTrend(true);
 });
 document.getElementById("maCtl").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if(!b) return;
-  view.ma = Number(b.dataset.ma); renderTrend();
+  view.ma = Number(b.dataset.ma); renderTrend(true);
 });
-document.getElementById("addParam").addEventListener("click", () => {
+
+document.getElementById("addParam").addEventListener("click", async () => {
   if(data.params.length >= 8){ toast("Mehr als acht Stifte hat der Plotter nicht"); return; }
-  const name = prompt("Name des Parameters");
-  if(!name || !name.trim()) return;
-  data.params.push({ id: uid(), name: name.trim() });
+  const name = await sheet({
+    title: "Was willst du festhalten?",
+    text: "Etwas, das du abends von 1 bis 10 einschätzen kannst.",
+    input: "", placeholder: "z. B. Rückenschmerzen", ok: "Anlegen"
+  });
+  if(!name) return;
+  data.params.push({ id: uid(), name: name });
   queueSave(); renderAll();
+  toast(name + " angelegt");
 });
+
 document.getElementById("importBtn").addEventListener("click", () =>
   document.getElementById("fileInput").click());
 document.getElementById("fileInput").addEventListener("change", e => {
@@ -1148,30 +1754,68 @@ document.getElementById("fileInput").addEventListener("change", e => {
   if(!f) return;
   const r = new FileReader();
   r.onload = () => importCSV(String(r.result));
-  r.onerror = () => toast("Datei konnte nicht gelesen werden");
+  r.onerror = () => toast("Die Datei ließ sich nicht lesen");
   r.readAsText(f, "utf-8");
   e.target.value = "";
 });
 document.getElementById("exportBtn").addEventListener("click", exportCSV);
+document.getElementById("exportJson").addEventListener("click", exportJson);
+document.getElementById("importJson").addEventListener("click", () =>
+  document.getElementById("jsonInput").click());
+document.getElementById("jsonInput").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = () => importJson(String(r.result));
+  r.onerror = () => toast("Die Datei ließ sich nicht lesen");
+  r.readAsText(f, "utf-8");
+  e.target.value = "";
+});
+
+document.getElementById("wipeBtn").addEventListener("click", async () => {
+  const ok = await sheet({
+    title: "Wirklich alles löschen?",
+    text: "Sämtliche Einträge, Notizen und Parameter auf diesem Gerät werden entfernt. Das lässt sich nicht rückgängig machen.",
+    ok: "Alles löschen", danger: true
+  });
+  if(!ok) return;
+  data = { params: DEFAULT_PARAMS.map(n => ({ id: uid(), name: n })), entries: {}, notes: {} };
+  view = { tab: view.tab, date: todayKey(), range: 90, ma: 7, hidden: {}, pair: null };
+  await Store.save(data);
+  renderAll();
+  toast("Alles gelöscht");
+});
+
+document.getElementById("themeBtn").addEventListener("click", () => {
+  themePref = themePref === "auto" ? "light" : (themePref === "light" ? "dark" : "auto");
+  try{ localStorage.setItem("pegel:theme", themePref); }catch(e){}
+  applyTheme();
+  toast(themePref === "auto" ? "Darstellung folgt dem System"
+       : themePref === "light" ? "Helle Darstellung" : "Dunkle Darstellung");
+});
 
 let rz = null;
 window.addEventListener("resize", () => {
   clearTimeout(rz);
-  rz = setTimeout(() => { if(view.tab === "trend") renderTrend(); }, 180);
+  rz = setTimeout(() => { if(view.tab === "trend") renderTrend(false); }, 180);
 });
 
 /* ---------- Start ---------- */
 (async function init(){
-  /* Manifest liegt jetzt als echte Datei vor */
+  try{ themePref = localStorage.getItem("pegel:theme") || "auto"; }catch(e){}
+  applyTheme();
+
   const stored = await Store.load();
   if(stored && stored.params){
     data = stored;
     if(!data.entries) data.entries = {};
+    if(!data.notes)   data.notes = {};
   }else{
     data.params = DEFAULT_PARAMS.map(n => ({ id: uid(), name: n }));
     await Store.save(data);
   }
   switchTab("entry");
+
   if("serviceWorker" in navigator){
     try{ navigator.serviceWorker.register("sw.js"); }catch(e){}
   }

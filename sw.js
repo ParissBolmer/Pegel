@@ -1,5 +1,5 @@
 /* Minimaler Service Worker: macht die App offline verfügbar. */
-const CACHE = "pegel-v1";
+const CACHE = "pegel-v2";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
